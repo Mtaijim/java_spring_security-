@@ -6,6 +6,7 @@ import com.example.auth_app.io.profileResponse;
 import com.example.auth_app.repository.userRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -16,6 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class profileServiceImpl implements profileService {
     private final userRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public profileResponse createProfile(profileRequest request) {
@@ -44,7 +46,7 @@ public class profileServiceImpl implements profileService {
                 .email(request.getEmail())
                 .userId(UUID.randomUUID().toString())
                 .name(request.getName())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .isAccountVerified(false)
              .verifyOtpExpiredAt(0L)
                 .verifyOtp(null)

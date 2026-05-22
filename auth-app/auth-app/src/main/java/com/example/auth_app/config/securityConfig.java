@@ -1,6 +1,11 @@
 package com.example.auth_app.config;
 
+import com.example.auth_app.service.AppUserDetailService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +25,11 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class securityConfig {
+
+    private final AppUserDetailService appUserDetailService;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults())
@@ -53,5 +62,12 @@ public class securityConfig {
        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
        source.registerCorsConfiguration("/**" ,config);
        return source;
+   }
+   @Bean
+   public AuthenticationManager authenticationManager(){
+       DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+       authenticationProvider.setUserDetailsService(appUserDetailService);
+       authenticationProvider.setPasswordEncoder(passwordEncoder());
+       return new ProviderManager(authenticationProvider);
    }
 }
