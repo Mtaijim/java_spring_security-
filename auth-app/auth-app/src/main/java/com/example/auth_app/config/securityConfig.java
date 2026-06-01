@@ -1,11 +1,13 @@
 package com.example.auth_app.config;
 
+import com.example.auth_app.filter.JwtRequestFilter;
 import com.example.auth_app.service.AppUserDetailService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,16 +31,28 @@ import java.util.List;
 public class securityConfig {
 
     private final AppUserDetailService appUserDetailService;
+    private final JwtRequestFilter jwtRequestFilter;
+    private final customAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth->auth
-                        .requestMatchers("/login","/register","/send-reset-otp","/reset-password","/logout")
-                        .permitAll().anyRequest().authenticated())
+                        .requestMatchers(
+                                "/login",
+                                "/register",
+                                "/send-reset-otp",
+                                "/reset-password",
+                                "/logout"
+                        ).permitAll()
+                       .anyRequest().authenticated())
                 .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .logout(AbstractHttpConfigurer::disable);
+                .logout(AbstractHttpConfigurer::disable)
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex->ex.authenticationEntryPoint(customAuthenticationEntryPoint));
+
+
         return http.build();
 
 
