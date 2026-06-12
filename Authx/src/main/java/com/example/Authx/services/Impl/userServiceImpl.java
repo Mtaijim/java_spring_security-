@@ -1,4 +1,4 @@
-package com.example.Authx.services;
+package com.example.Authx.services.Impl;
 
 import com.example.Authx.dtos.UserDto;
 import com.example.Authx.entity.Provider;
@@ -6,12 +6,13 @@ import com.example.Authx.entity.User;
 import com.example.Authx.exceptions.ResourceNotFoundException;
 import com.example.Authx.helper.UserHelper;
 import com.example.Authx.repositories.userRepository;
+import com.example.Authx.services.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -57,6 +58,7 @@ public class userServiceImpl implements UserService {
 //TODO :change password logic here .....
         if (userDto.getPassword()!=null) existingUser.setPassword(userDto.getPassword());
         existingUser.setEnable(userDto.getEnable());
+        existingUser.setUpdatedAt(Instant.now());
    User updateUser = userRepository.save(existingUser);
         return modelMapper.map(updateUser,UserDto.class);
     }
