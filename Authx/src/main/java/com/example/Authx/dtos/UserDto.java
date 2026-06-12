@@ -1,8 +1,6 @@
-package com.example.AuthNext.dtos;
+package com.example.Authx.dtos;
 
-import com.example.AuthNext.entity.Provider;
-import com.example.AuthNext.entity.Role;
-import jakarta.persistence.*;
+import com.example.Authx.entity.Provider;
 import lombok.*;
 
 import java.time.Instant;
@@ -12,22 +10,19 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class userDto {
-
+public class UserDto {
 
     private UUID id;
     private String email;
     private String name;
     private String password;
     private String image;
-    private boolean enable= true;
-    private Instant createdAt =Instant.now();
+    private Boolean enable = true;
+    private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
-    private Provider provider =Provider.LOCAL;
+    private Provider provider = Provider.LOCAL;
     private Set<RoleDto> roles = new HashSet<>();
-
-
 }

@@ -1,4 +1,4 @@
-package com.example.AuthNext.entity;
+package com.example.Authx.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,7 +18,6 @@ import java.util.UUID;
 public class Role {
     @Id
     private UUID id = UUID.randomUUID();
-    @Column(unique = true,nullable = false)
+    @Column(unique = true ,nullable = false)
     private String name;
-
 }

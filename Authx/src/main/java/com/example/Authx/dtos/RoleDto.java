@@ -1,4 +1,4 @@
-package com.example.AuthNext.dtos;
+package com.example.Authx.dtos;
 
 import lombok.*;
 
@@ -6,10 +6,11 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class RoleDto {
-    private UUID id;
+
+    private UUID id ;
     private String name;
 }
