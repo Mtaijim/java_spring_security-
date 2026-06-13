@@ -1,7 +1,0 @@
-spring:
-  application:
-    name: AuthNext
-  profiles:
-    active: dev
-# configurations
-
