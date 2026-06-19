@@ -8,6 +8,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.SpringSecurityCoreVersion;
@@ -27,20 +29,31 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+
     private final JwtService jwtService;
     private final userRepository userRepository;
+    private Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
   String header = request.getHeader("Authorization");
-  if(header!=null || header.startsWith("Bearer ")) {
+        logger.info("Authorization header : {}", header);
+
+  if(header!=null && header.startsWith("Bearer ")) {
+
+
       String token = header.substring(7);
-      if(!jwtService.isAccessToken(token)){
-//          message pass
-          filterChain.doFilter(request,response);
-          return;
-      }
+
       try {
+
+          if(!jwtService.isAccessToken(token)){
+//          message pass
+              filterChain.doFilter(request,response);
+              return;
+          }
+
+
           Jws<Claims> parse = jwtService.parse(token);
          Claims payload = parse.getPayload();
          String userid =  payload.getSubject();
@@ -67,16 +80,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
       } catch (ExpiredJwtException e) {
-        e.printStackTrace();
-      } catch (MalformedJwtException e) {
-          e.printStackTrace();
-      } catch (JwtException e) {
-          e.printStackTrace();
-
-  } catch (Exception e){
-          e.printStackTrace();
+          request.setAttribute("error", "Token Expired");
+      }  catch (Exception e){
+          request.setAttribute("error", "Invalid Token");
       }
   }
   filterChain.doFilter(request,response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        return request.getRequestURI().startsWith("/api/v1/auth");
     }
 }
