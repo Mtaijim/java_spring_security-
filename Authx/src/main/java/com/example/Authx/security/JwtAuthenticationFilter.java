@@ -57,7 +57,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           Jws<Claims> parse = jwtService.parse(token);
          Claims payload = parse.getPayload();
          String userid =  payload.getSubject();
-         UUID userUuid = UserHelper.parseUUID(userid);
+  
+          UUID userUuid = UserHelper.parseUUID(userid);
 
          userRepository.findById(userUuid).ifPresent( user-> {
 //             check for user enabled or not
