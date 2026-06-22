@@ -5,8 +5,15 @@ const Navbar = () => {
   return (
     <nav className="flex justify-between items-center px-6 py-3 border-b border-border bg-background text-foreground">
       {/* ── Logo ── */}
-      <NavLink to="/" className="flex items-center gap-2">
-        <span className="rounded border border-border bg-muted px-4 py-1.5 text-sm font-bold tracking-wide">
+      <NavLink
+        to="/"
+        className={({ isActive }) =>
+          `flex items-center gap-2 transition-colors ${
+            isActive ? "text-primary" : ""
+          }`
+        }
+      >
+        <span className="rounded border border-border bg-card px-4 py-1.5 text-sm font-bold tracking-wide shadow-sm">
           Auth<span className="text-primary">X</span>
         </span>
       </NavLink>
