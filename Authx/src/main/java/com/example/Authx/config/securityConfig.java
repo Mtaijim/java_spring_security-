@@ -52,8 +52,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             .cors(Customizer.withDefaults())
             .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login",
-                    "/api/v1/auth/logout","/api/v1/auth/refresh")
+                    .requestMatchers(AppConstants.AUTH_PUBLIC_URLS)
                     .permitAll()
                     .anyRequest()
                     .authenticated()

@@ -55,8 +55,8 @@ security:
 logging:
   level:
     org.springframework.security: DEBUG
-  app:
-    auth:
-      frontend:
-       success-redirect: http:
-       failure-redirect: http:
+app:
+  auth:
+    frontend:
+      success-redirect: http://localhost:5173/oauth/success
+      failure-redirect: http://localhost:5173/oauth/failure
