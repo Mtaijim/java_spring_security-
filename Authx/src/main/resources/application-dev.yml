@@ -56,6 +56,8 @@ logging:
   level:
     org.springframework.security: DEBUG
 app:
+  cors:
+    front-end-url: http://localhost:5173
   auth:
     frontend:
       success-redirect: http://localhost:5173/oauth/success

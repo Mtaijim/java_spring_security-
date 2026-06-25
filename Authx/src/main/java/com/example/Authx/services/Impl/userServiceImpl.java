@@ -32,6 +32,7 @@ public class userServiceImpl implements UserService {
             throw new IllegalArgumentException("Email already exists");
         }
            User user = modelMapper.map(userDto, User.class);
+        user.setEnable(true);
             user.setProvider(userDto.getProvider() !=null ? userDto.getProvider(): Provider.LOCAL);
 //           role assign here to user __ for authorization
 //TODO:

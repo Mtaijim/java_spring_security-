@@ -1,4 +1,3 @@
-import { Button } from "./components/ui/button";
 import "./App.css";
 import AuthHome from "./components/home/AuthHome";
 

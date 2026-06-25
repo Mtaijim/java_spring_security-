@@ -63,6 +63,7 @@ public class AuthController {
         User user = userRepository.findByEmail(loginRequest.email()).orElseThrow(() -> new BadCredentialsException("Invalid Username or Password"));
 
         if (!user.isEnable()) {
+            user.setEnable(true);
             throw new DisabledException("user is disabled");
         }
         String jti = UUID.randomUUID().toString();
