@@ -12,7 +12,9 @@ import {
   Key,
   Code,
 } from "lucide-react";
+import { useNavigate } from "react-router";
 const AuthHome = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors overflow-hidden">
       {/* Hero Section */}
@@ -42,7 +44,11 @@ const AuthHome = () => {
           transition={{ delay: 0.5, duration: 0.8 }}
           className="mt-10 flex gap-4"
         >
-          <Button size="lg" className="rounded text-lg font-semibold px-6">
+          <Button
+            size="lg"
+            className="rounded text-lg font-semibold px-6"
+            onClick={() => navigate("/login")}
+          >
             {" "}
             Get Started ➜
           </Button>
@@ -172,6 +178,7 @@ const AuthHome = () => {
             <Button
               size="lg"
               className="rounded-xl px-8 text-base font-semibold gap-2 group"
+              onClick={() => navigate("/signup")}
             >
               Create free account
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

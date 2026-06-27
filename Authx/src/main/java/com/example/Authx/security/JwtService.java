@@ -49,7 +49,11 @@ private final String issuer;
 //  generate token;
 public String generateAccessToken(User user){
     Instant now = Instant.now();
-    List<String > roles= user.getRoles()==null? List.of() : user.getRoles().stream().map(Role::getName).toList();
+    List<String > roles= user
+            .getRoles()==null? List
+            .of() : user
+            .getRoles()
+            .stream().map(role -> role.getName().name()).toList();
     return Jwts.builder()
             .id(UUID.randomUUID().toString())
             .subject(user.getId().toString())

@@ -14,10 +14,11 @@ import {
 } from "lucide-react";
 
 // shadcn/ui imports — all tokens resolve automatically in light & dark
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import toast from "react-hot-toast";
 import {
   Tooltip,
   TooltipContent,
@@ -25,6 +26,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import useAuthStore from "@/auth/store";
+import type UserT from "@/models/User";
+import { getCurrentUser } from "@/services/Authservice";
+import { useNavigate } from "react-router";
 
 // ─── Stat Card ───────────────────────────────────────────────────────────────
 
@@ -69,70 +73,25 @@ const StatCard = ({
 );
 
 // ─── Activity Item ────────────────────────────────────────────────────────────
-
-const ActivityItem = ({
-  title,
-  description,
-  time,
-  index,
-}: {
-  title: string;
-  description: string;
-  time: string;
-  index: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, x: -16 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay: 0.3 + index * 0.08, duration: 0.3 }}
-    className="flex gap-3 group"
-  >
-    <div className="flex flex-col items-center gap-1 pt-1">
-      <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-      {index < 3 && <div className="w-px flex-1 bg-border" />}
-    </div>
-    <div className="pb-4 flex-1">
-      <p className="text-sm font-medium leading-none mb-1">{title}</p>
-      <p className="text-sm text-muted-foreground">{description}</p>
-      <p className="text-xs text-muted-foreground/70 mt-1.5">{time}</p>
-    </div>
-  </motion.div>
-);
-
 // ─── Quick Link Button ────────────────────────────────────────────────────────
-
-const QuickLink = ({
-  label,
-  icon: Icon,
-  index,
-}: {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  index: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, x: -8 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay: 0.4 + index * 0.07 }}
-  >
-    <Button
-      variant="ghost"
-      className="w-full justify-between px-3 h-10 font-normal group"
-    >
-      <span className="flex items-center gap-3">
-        <Icon className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-        <span>{label}</span>
-      </span>
-      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1 group-hover:translate-x-0 duration-150" />
-    </Button>
-  </motion.div>
-);
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export const Userhome = () => {
   const user = useAuthStore((state) => state.user);
   const [mounted, setMounted] = useState(false);
+  const [user1, setUser1] = useState<UserT | null>(null);
+  const navigate = useNavigate();
+  const getUserData = async () => {
+    try {
+      const user1 = await getCurrentUser(user?.email);
+
+      setUser1(user1);
+      toast.success("you are able to access secured apis");
+    } catch (error) {
+      console.log(error);
+      toast.error("error in getting data");
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -159,7 +118,7 @@ export const Userhome = () => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const },
+      transition: { duration: 0.4, ease: "easeOut" },
     },
   };
 
@@ -191,36 +150,6 @@ export const Userhome = () => {
       value: "1,293",
       trend: "+89 this week",
       delay: 0.25,
-    },
-  ];
-
-  const quickLinks = [
-    { label: "Edit Profile", icon: Settings },
-    { label: "View Analytics", icon: BarChart3 },
-    { label: "Messages", icon: MessageSquare },
-    { label: "Settings", icon: Settings },
-  ];
-
-  const activities = [
-    {
-      title: "Profile Updated",
-      description: "You updated your profile picture and bio",
-      time: "2 hours ago",
-    },
-    {
-      title: "New Follower",
-      description: "sarah.dev started following you",
-      time: "5 hours ago",
-    },
-    {
-      title: "Post Liked",
-      description: "Your latest post received 32 likes",
-      time: "1 day ago",
-    },
-    {
-      title: "Comment Received",
-      description: "john_smith commented on your post",
-      time: "2 days ago",
     },
   ];
 
@@ -344,69 +273,11 @@ export const Userhome = () => {
 
           {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Recent Activity */}
-            <motion.div variants={itemVariants} className="lg:col-span-2">
-              <Card className="h-full">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base font-semibold">
-                      Recent Activity
-                    </CardTitle>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground h-8 px-2 gap-1"
-                    >
-                      View all
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  {activities.map((a, i) => (
-                    <ActivityItem key={a.title} {...a} index={i} />
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
+            <Button onClick={getUserData} className="rounded-2xl px-8 text-lg">
+              Get current user
+            </Button>
 
-            {/* Quick Links + Upgrade */}
-            <motion.div variants={itemVariants} className="space-y-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-semibold">
-                    Quick Links
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0 space-y-1">
-                  {quickLinks.map((l, i) => (
-                    <QuickLink key={l.label} {...l} index={i} />
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Upgrade Banner */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-              >
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardContent className="p-5">
-                    <p className="font-semibold text-sm mb-1">
-                      Upgrade your plan
-                    </p>
-                    <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                      Unlock advanced analytics, priority support, and unlimited
-                      exports.
-                    </p>
-                    <Button size="sm" className="w-full">
-                      See plans
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </motion.div>
+            <p>{user1?.name}</p>
           </div>
         </motion.div>
       </motion.div>

@@ -1,3 +1,8 @@
+export interface Role {
+  id: string;
+  name: "ROLE_USER" | "ROLE_ADMIN";
+}
+
 export default interface User {
   id: string;
   email: string;
@@ -7,4 +12,5 @@ export default interface User {
   updatedAt?: string;
   createdAt?: string;
   provider: string;
+  roles: Role[];
 }

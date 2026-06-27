@@ -10,6 +10,7 @@ import { toast as Toast } from "react-hot-toast";
 import type { FormData as RegisterFormData } from "../models/FormData.ts";
 import { registerUser } from "../services/Authservice.ts";
 import { useNavigate } from "react-router";
+import OAuthButtons from "@/components/OAuthButtons.tsx";
 
 export default function SignUp() {
   const [formData, setFormData] = useState<RegisterFormData>({
@@ -205,22 +206,15 @@ export default function SignUp() {
               </div>
 
               {/* OAuth */}
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline">
-                  <FaGoogle className="mr-2 h-4 w-4" />
-                  Google
-                </Button>
-
-                <Button variant="outline">
-                  <FaGithub className="mr-2 h-4 w-4" />
-                  GitHub
-                </Button>
-              </div>
+              <OAuthButtons />
 
               {/* Login Link */}
-              <p className="pt-4 text-center text-sm text-muted-foreground">
+              <p className="pt-4 text-center  text-sm text-muted-foreground">
                 Already have an account?
-                <span className="ml-1 cursor-pointer font-medium text-primary hover:underline">
+                <span
+                  onClick={() => navigate("/login")}
+                  className="ml-1 cursor-pointer font-medium text-primary hover:underline"
+                >
                   Sign in
                 </span>
               </p>

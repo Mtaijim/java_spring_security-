@@ -1,6 +1,7 @@
 package com.example.Authx.dtos;
 
 import com.example.Authx.entity.Provider;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.time.Instant;
@@ -18,6 +19,8 @@ public class UserDto {
     private UUID id;
     private String email;
     private String name;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private String image;
     private Boolean enable = true;

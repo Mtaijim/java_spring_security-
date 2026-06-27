@@ -1,5 +1,7 @@
 import axios from "axios";
 import useAuthStore from "@/auth/store.ts";
+import { refreshToken } from "@/services/Authservice";
+import toast from "react-hot-toast";
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1",
@@ -8,7 +10,6 @@ const apiClient = axios.create({
   },
   withCredentials: true,
   timeout: 10000,
-  // Replace with your backend API base URL
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -17,5 +18,77 @@ apiClient.interceptors.request.use((config) => {
   if (config.data instanceof FormData) delete config.headers["Content-Type"];
   return config;
 });
+
+let isRefreshing = false;
+let pending: Array<(token: string) => void> = [];
+
+function queueRequest(cb: (token: string) => void) {
+  pending.push(cb);
+}
+
+function resolveQueue(newToken: string) {
+  pending.forEach((cb) => cb(newToken));
+  pending = [];
+}
+
+function rejectQueue() {
+  pending.forEach((cb) => cb(""));
+  pending = [];
+}
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    // Guard against network errors where error.response is undefined
+    const is401 = error.response?.status === 401;
+    const original = error.config;
+    // In your ApiClient.ts response interceptor, inside the error handler:
+    if (error.response?.status === 403) {
+      // Don't retry or refresh — user is authenticated but lacks permission
+      return Promise.reject(error); // let the calling component handle it
+    }
+
+    if (!is401 || original._retry) {
+      return Promise.reject(error);
+    }
+
+    // Queue concurrent 401s while a refresh is already in flight
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        queueRequest((newToken: string) => {
+          if (!newToken) return reject(error);
+          original.headers.Authorization = `Bearer ${newToken}`;
+          resolve(apiClient(original));
+        });
+      });
+    }
+
+    // Mark this request so it won't loop if the retry also gets a 401
+    original._retry = true;
+    isRefreshing = true;
+
+    try {
+      const loginResponse = await refreshToken();
+      const newToken = loginResponse.accessToken;
+
+      if (!newToken) throw new Error("No new access token received");
+
+      // Persist the new token and unblock the queue
+      useAuthStore.getState().setAccessToken(newToken);
+      resolveQueue(newToken);
+
+      // Retry the original request with the fresh token
+      original.headers.Authorization = `Bearer ${newToken}`;
+      return apiClient(original);
+    } catch (refreshError) {
+      // Refresh failed — drop the queue and force a logout
+      rejectQueue();
+      useAuthStore.getState().clearAuth();
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
+  },
+);
 
 export default apiClient;

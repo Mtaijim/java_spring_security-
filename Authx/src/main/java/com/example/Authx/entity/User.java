@@ -52,12 +52,13 @@ protected void onUpdate(){
         updatedAt=Instant.now();
 }
 
+//changed .name for rbac
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
 return roles.stream()
                 .map(role ->
                         new SimpleGrantedAuthority(role
-                                .getName())).toList();
+                                .getName().name())).toList();
     }
 
     @Override
@@ -84,4 +85,8 @@ return roles.stream()
     public boolean isEnabled() {
         return this.enable;
     }
+
+
+
+
 }

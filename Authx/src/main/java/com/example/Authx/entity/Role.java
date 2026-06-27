@@ -1,9 +1,6 @@
 package com.example.Authx.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.UUID;
@@ -17,7 +14,11 @@ import java.util.UUID;
 @Table(name = "roles")
 public class Role {
     @Id
-    private UUID id = UUID.randomUUID();
-    @Column(unique = true ,nullable = false)
-    private String name;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", length = 36, updatable = false, nullable = false)
+    private String id;
+
+    @Enumerated(EnumType.STRING)
+    private RoleType name;
+
 }

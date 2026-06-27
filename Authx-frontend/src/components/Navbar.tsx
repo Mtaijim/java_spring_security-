@@ -1,6 +1,7 @@
 import useAuthStore from "@/auth/store.ts";
 import { Button } from "./ui/button.tsx";
 import { NavLink, useNavigate } from "react-router";
+import { isAdmin } from "@/utils/roles";
 
 const Navbar = () => {
   const checkLogin = useAuthStore((state) => state.checkLogin);
@@ -28,7 +29,22 @@ const Navbar = () => {
       <div className="flex items-center gap-4">
         {checkLogin() ? (
           <>
-            <NavLink to={"/dashboard/profile"}>{user?.name}</NavLink>
+            {isAdmin(user) && (
+              <NavLink
+                to="/dashboard/admin/users"
+                className="text-sm text-primary"
+              >
+                Admin panel
+              </NavLink>
+            )}
+            <NavLink to={"/dashboard/profile"}>
+              <div className="flex gap-2 justify-center items-center">
+                <div>
+                  {<img className="w-10 rounded-full" src={user?.image} />}
+                </div>{" "}
+                <div>{user?.name}</div>
+              </div>
+            </NavLink>
 
             <Button
               onClick={() => {

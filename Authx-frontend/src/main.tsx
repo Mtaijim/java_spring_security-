@@ -11,6 +11,10 @@ import RootLayout from "./pages/RootLayout.tsx";
 import Dashboard from "./pages/users/Dashboard.tsx";
 import { Userhome } from "./pages/users/Userhome.tsx";
 import Userprofile from "./pages/users/Userprofile.tsx";
+import OAuthScucess from "./pages/OAuthScucess.tsx";
+import OAuthFailure from "./pages/OAuthFailure.tsx";
+import AdminRoute from "./pages/AdminRoute.tsx";
+import AdminUserList from "./pages/users/AdminUserList.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -24,7 +28,12 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<Userhome />} />
           <Route path="profile" element={<Userprofile />} />
+          <Route element={<AdminRoute />}>
+            <Route path="admin/users" element={<AdminUserList />} />
+          </Route>
         </Route>
+        <Route path="oauth/success" element={<OAuthScucess />} />
+        <Route path="oauth/failure" element={<OAuthFailure />} />
       </Route>
     </Routes>
   </BrowserRouter>,

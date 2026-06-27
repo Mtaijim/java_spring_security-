@@ -8,10 +8,12 @@ import com.example.Authx.security.Oauth2SuccessHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -33,6 +35,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class securityConfig {
 
@@ -56,9 +59,9 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             .cors(Customizer.withDefaults())
             .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(AppConstants.AUTH_PUBLIC_URLS)
-                    .permitAll()
-                    .anyRequest()
+                    .requestMatchers(AppConstants.AUTH_PUBLIC_URLS).permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/users").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").hasRole("ADMIN")  .anyRequest()
                     .authenticated()
             )
             .oauth2Login(oauth2-> oauth2.successHandler(successHandler)

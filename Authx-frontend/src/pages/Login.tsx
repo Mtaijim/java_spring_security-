@@ -5,7 +5,7 @@ import { Alert, AlertTitle } from "../components/ui/alert";
 import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
-import { FaGithub, FaGoogle } from "react-icons/fa";
+
 import { useState } from "react";
 import type { LoginData } from "../models/LoginData.ts";
 import { useEffect } from "react";
@@ -13,6 +13,7 @@ import { useNavigate } from "react-router";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import useAuthStore from "@/auth/store.ts";
 import toast from "react-hot-toast";
+import OAuthButtons from "@/components/OAuthButtons.tsx";
 
 const Login = () => {
   const [loginData, setLoginData] = useState<LoginData>({
@@ -156,17 +157,7 @@ const Login = () => {
               </div>
 
               {/* OAuth Buttons */}
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline">
-                  <FaGoogle className="mr-2 h-4 w-4" />
-                  Google
-                </Button>
-
-                <Button variant="outline">
-                  <FaGithub className="mr-2 h-4 w-4" />
-                  GitHub
-                </Button>
-              </div>
+              <OAuthButtons />
             </form>
           </CardContent>
         </Card>
