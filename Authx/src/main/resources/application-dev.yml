@@ -31,6 +31,18 @@ spring:
             scope:
              - user:email
              - read:user
+
+  mail:
+    host: smtp-relay.brevo.com
+    port: 587
+    username: ${BREVO_SMTP_LOGIN}
+    password: ${BREVO_SMTP_KEY}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 server:
   error:
     include-message: always
@@ -56,9 +68,13 @@ logging:
   level:
     org.springframework.security: DEBUG
 app:
-  cors:
-    front-end-url: http://localhost:5173
+  frontend:
+    url: http://localhost:5173
   auth:
     frontend:
       success-redirect: http://localhost:5173/oauth/success
       failure-redirect: http://localhost:5173/oauth/failure
+  cors:
+    front-end-url: http://localhost:5173
+  mail:
+    from: mhdtaijim9373@gmail.com

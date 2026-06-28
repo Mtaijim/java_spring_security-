@@ -94,7 +94,7 @@ response.getWriter().write(objectMapper.writeValueAsString(apiError));
 
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(urls));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 

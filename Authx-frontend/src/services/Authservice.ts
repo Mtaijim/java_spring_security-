@@ -30,6 +30,11 @@ export const getCurrentUser = async (emailId: string | undefined) => {
   return response.data;
 };
 
+export const getUserById = async (userId: string) => {
+  const response = await apiClient.get<User>(`/users/${userId}`);
+  return response.data;
+};
+
 //refresh token
 
 export const refreshToken = async () => {
@@ -45,5 +50,13 @@ export const updateUser = async (userId: string, payload: any) => {
   }
 
   const response = await apiClient.put(`/users/${userId}`, payload);
+  return response.data;
+};
+
+export const assignRole = async (
+  userId: string,
+  role: "ROLE_USER" | "ROLE_ADMIN",
+) => {
+  const response = await apiClient.patch(`/users/${userId}/roles`, { role });
   return response.data;
 };

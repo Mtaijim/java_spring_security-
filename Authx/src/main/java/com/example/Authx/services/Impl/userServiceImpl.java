@@ -8,6 +8,7 @@ import com.example.Authx.entity.RoleType;
 import com.example.Authx.entity.User;
 import com.example.Authx.exceptions.ResourceNotFoundException;
 import com.example.Authx.helper.UserHelper;
+import com.example.Authx.repositories.RefreshTokenRepository;
 import com.example.Authx.repositories.RoleRepository;
 import com.example.Authx.repositories.userRepository;
 import com.example.Authx.services.UserService;
@@ -17,6 +18,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collector;
@@ -29,6 +31,7 @@ public class userServiceImpl implements UserService {
 
     private final userRepository userRepository;
     private final RoleRepository roleRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final ModelMapper modelMapper;
 
     @Override
@@ -40,7 +43,7 @@ public class userServiceImpl implements UserService {
             throw new IllegalArgumentException("Email already exists");
         }
            User user = modelMapper.map(userDto, User.class);
-        user.setEnable(true);
+        user.setEnable(userDto.getEnable() != null ? userDto.getEnable() : true);
         user.setProvider(userDto.getProvider() !=null ? userDto.getProvider(): Provider.LOCAL);
 //           role assign here to user __ for authorization
 
@@ -83,6 +86,7 @@ public class userServiceImpl implements UserService {
     public void deleteUser(String userId) {
        UUID uid = UserHelper.parseUUID(userId);
       User user = userRepository.findById(uid).orElseThrow(()-> new ResourceNotFoundException("user not found with given id "));
+        refreshTokenRepository.deleteByUser(user);
        userRepository.delete(user);
     }
 
@@ -101,5 +105,23 @@ public class userServiceImpl implements UserService {
                 .toList();
     }
 
+    @Override
+    public UserDto assignRole(String userId, RoleType role) {
+        UUID uid = UserHelper.parseUUID(userId);
+        User user = userRepository.findById(uid)
+                .orElseThrow(()-> new ResourceNotFoundException("user not found"));
+        Role roleEntity = roleRepository.findByName(role)
+                .orElseThrow(()-> new IllegalStateException("role not found" + role));
 
+        user.setRoles(new HashSet<>(Set.of(roleEntity)));
+        User saved = userRepository.save(user);
+        return modelMapper.map(saved, UserDto.class);
+    }
+
+
+    @Override
+    public User getRawUserById(String userId) {
+        return userRepository.findById(UserHelper.parseUUID(userId))
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
 }

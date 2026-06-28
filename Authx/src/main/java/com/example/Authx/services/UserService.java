@@ -1,7 +1,8 @@
 package com.example.Authx.services;
 
 import com.example.Authx.dtos.UserDto;
-
+import com.example.Authx.entity.RoleType;
+import com.example.Authx.entity.User;
 
 
 public interface UserService {
@@ -14,4 +15,7 @@ public interface UserService {
 
  UserDto getUserById(String userId);
  Iterable<UserDto> getAllUsers();
+ UserDto assignRole(String userId, RoleType role);
+
+ User getRawUserById(String userId);
 }

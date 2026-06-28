@@ -2,6 +2,8 @@ import useAuthStore from "@/auth/store.ts";
 import { Button } from "./ui/button.tsx";
 import { NavLink, useNavigate } from "react-router";
 import { isAdmin } from "@/utils/roles";
+import { ThemeToggle } from "./ThemeToggle.tsx";
+import { User } from "lucide-react";
 
 const Navbar = () => {
   const checkLogin = useAuthStore((state) => state.checkLogin);
@@ -29,22 +31,42 @@ const Navbar = () => {
       <div className="flex items-center gap-4">
         {checkLogin() ? (
           <>
-            {isAdmin(user) && (
-              <NavLink
-                to="/dashboard/admin/users"
-                className="text-sm text-primary"
-              >
-                Admin panel
-              </NavLink>
-            )}
+            <ThemeToggle />
+            <NavLink to={"/dashboard"}>
+              <div className="flex items-center hover:underline">
+                <div>
+                  <p>Dashboard</p>
+                </div>
+              </div>
+            </NavLink>
             <NavLink to={"/dashboard/profile"}>
               <div className="flex gap-2 justify-center items-center">
                 <div>
-                  {<img className="w-10 rounded-full" src={user?.image} />}
+                  {user?.image ? (
+                    <img
+                      className="w-10 h-10 rounded-full object-cover"
+                      src={user.image}
+                      alt="User avatar"
+                    />
+                  ) : (
+                    <User className="w-5 h-5" />
+                  )}
                 </div>{" "}
-                <div>{user?.name}</div>
               </div>
             </NavLink>
+
+            {isAdmin(user) && (
+              <NavLink
+                to="/dashboard/admin/users"
+                className={({ isActive }) =>
+                  `text-sm font-medium transition-colors hover:text-foreground ${
+                    isActive ? "text-foreground" : "text-muted-foreground"
+                  }`
+                }
+              >
+                Admin
+              </NavLink>
+            )}
 
             <Button
               onClick={() => {

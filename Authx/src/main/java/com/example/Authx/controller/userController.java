@@ -1,5 +1,6 @@
 package com.example.Authx.controller;
 
+import com.example.Authx.dtos.RoleAssignment;
 import com.example.Authx.dtos.UserDto;
 import com.example.Authx.services.UserService;
 import lombok.AllArgsConstructor;
@@ -52,4 +53,15 @@ return ResponseEntity.status(HttpStatus.CREATED).body((userService.createUser(us
     public ResponseEntity<UserDto> getUserById(@PathVariable("userid") String userid){
             return ResponseEntity.ok(userService.getUserById(userid));
     }
+//    add end point for assign role
+@PatchMapping("/{uuid}/roles")
+@PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserDto> assignRole(
+            @PathVariable("uuid") String uuid,
+            @RequestBody RoleAssignment request
+    ){
+            return ResponseEntity.ok(userService.assignRole(uuid,request.getRole()));
+}
+
+
 }

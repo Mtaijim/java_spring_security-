@@ -26,10 +26,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import com.example.Authx.entity.RefreshToken;
 import com.example.Authx.repositories.RefreshTokenRepository;
 import java.time.Instant;
@@ -51,6 +48,7 @@ public class AuthController {
     private final ModelMapper modelMapper;
     private final RefreshTokenRepository refreshTokenRepository;
     private final CookieService cookieService;
+
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(
@@ -217,5 +215,11 @@ public ResponseEntity<Void> logout(
     public ResponseEntity<UserDto> registerUser(@RequestBody UserDto userDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerUser(userDto));
     }
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyEmail(@RequestParam("token") String token){
+        authService.verifyEmail(token);
+        return ResponseEntity.ok("Email verified successfully . you can now login");
+    }
+
 
 }

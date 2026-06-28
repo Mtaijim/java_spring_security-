@@ -15,26 +15,33 @@ import OAuthScucess from "./pages/OAuthScucess.tsx";
 import OAuthFailure from "./pages/OAuthFailure.tsx";
 import AdminRoute from "./pages/AdminRoute.tsx";
 import AdminUserList from "./pages/users/AdminUserList.tsx";
+import VerifyEmail from "./pages/VerifyEmail.tsx";
+import CheckEmail from "./pages/users/CheckEmail.tsx";
+import { ThemeProvider } from "./components/ThemeProvider.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<RootLayout />}>
-        <Route index element={<App />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/dashboard" element={<Dashboard />}>
-          <Route index element={<Userhome />} />
-          <Route path="profile" element={<Userprofile />} />
-          <Route element={<AdminRoute />}>
-            <Route path="admin/users" element={<AdminUserList />} />
+    <ThemeProvider defaultTheme="system" storageKey="authx-theme">
+      <Routes>
+        <Route path="/" element={<RootLayout />}>
+          <Route index element={<App />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/dashboard" element={<Dashboard />}>
+            <Route index element={<Userhome />} />
+            <Route path="profile" element={<Userprofile />} />
+            <Route element={<AdminRoute />}>
+              <Route path="admin/users" element={<AdminUserList />} />
+            </Route>
           </Route>
+          <Route path="oauth/success" element={<OAuthScucess />} />
+          <Route path="oauth/failure" element={<OAuthFailure />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/check-email" element={<CheckEmail />} />
         </Route>
-        <Route path="oauth/success" element={<OAuthScucess />} />
-        <Route path="oauth/failure" element={<OAuthFailure />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </ThemeProvider>
   </BrowserRouter>,
 );

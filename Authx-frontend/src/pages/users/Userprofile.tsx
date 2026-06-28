@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
+
 import { Pencil } from "lucide-react";
 import useAuthStore from "@/auth/store";
-import type User from "@/models/User";
+
 import { updateUser } from "@/services/Authservice";
 import { useNavigate } from "react-router";
 
@@ -26,14 +26,14 @@ const UserProfile: React.FC = () => {
   useEffect(() => {
     if (user) {
       setName(user.name ?? "");
-      setEnabled(user.enabled ?? false);
+      setEnabled(user.enable ?? false);
     }
   }, [user]);
 
   const onEdit = () => {
     // Reset to current saved values before opening edit mode
     setName(user?.name ?? "");
-    setEnabled(user?.enabled ?? false);
+    setEnabled(user?.enable ?? false);
     setError(null);
     setIsEditing(true);
   };
@@ -49,7 +49,7 @@ const UserProfile: React.FC = () => {
     setError(null);
 
     try {
-      const serverUser = await updateUser(user.id, { name, enabled });
+      const serverUser = await updateUser(user.id, { name, enable: enabled });
       changeLocalLoginData(accessToken ?? "", serverUser, true);
       setIsEditing(false);
       navigate("/dashboard");
@@ -78,7 +78,7 @@ const UserProfile: React.FC = () => {
             {!isEditing && (
               <Button variant="ghost" size="sm" onClick={onEdit}>
                 <Pencil className="w-4 h-4 mr-2" />
-                Edit
+                Change Name
               </Button>
             )}
           </CardHeader>
@@ -134,18 +134,13 @@ const UserProfile: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="space-y-1">
-                  <Label htmlFor="account-active">Account Active</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Toggle account accessibility.
-                  </p>
-                </div>
-                <Switch
-                  id="account-active"
-                  checked={isEditing ? enabled : !!user.enabled}
-                  onCheckedChange={setEnabled}
-                  disabled={!isEditing}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="role">Role</Label>
+                <Input
+                  id="role"
+                  value={user.roles?.[0]?.name ?? "—"}
+                  readOnly
+                  className="bg-muted cursor-default"
                 />
               </div>
             </div>

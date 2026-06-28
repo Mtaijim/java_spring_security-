@@ -5,5 +5,6 @@ import com.example.Authx.dtos.UserDto;
 public interface AuthService {
     UserDto registerUser(UserDto userDto);
 
+    void verifyEmail(String token);
 
 }

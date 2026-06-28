@@ -58,7 +58,7 @@ export default function SignUp() {
       console.log("User registered successfully:", response);
       Toast.success("User registered successfully!");
       setFormData({ name: "", email: "", password: "" });
-      navigate("/login");
+      navigate("/check-email", { state: { email: formData.email } });
     } catch (error: any) {
       console.error("Error registering user:", error);
       setError(
@@ -212,7 +212,11 @@ export default function SignUp() {
               <p className="pt-4 text-center  text-sm text-muted-foreground">
                 Already have an account?
                 <span
-                  onClick={() => navigate("/login")}
+                  onClick={() =>
+                    navigate("/check-email", {
+                      state: { email: formData.email },
+                    })
+                  }
                   className="ml-1 cursor-pointer font-medium text-primary hover:underline"
                 >
                   Sign in

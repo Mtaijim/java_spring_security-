@@ -27,10 +27,11 @@ import {
 } from "@/components/ui/tooltip";
 import useAuthStore from "@/auth/store";
 import type UserT from "@/models/User";
-import { getCurrentUser } from "@/services/Authservice";
+import { getUserById } from "@/services/Authservice";
 import { useNavigate } from "react-router";
-
-// ─── Stat Card ───────────────────────────────────────────────────────────────
+import { NavLink } from "react-router";
+import { isAdmin } from "@/utils/roles";
+// -- Stat Card
 
 const StatCard = ({
   icon: Icon,
@@ -71,10 +72,7 @@ const StatCard = ({
     </Card>
   </motion.div>
 );
-
-// ─── Activity Item ────────────────────────────────────────────────────────────
-// ─── Quick Link Button ────────────────────────────────────────────────────────
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ---Main Component
 
 export const Userhome = () => {
   const user = useAuthStore((state) => state.user);
@@ -82,9 +80,9 @@ export const Userhome = () => {
   const [user1, setUser1] = useState<UserT | null>(null);
   const navigate = useNavigate();
   const getUserData = async () => {
+    if (!user?.id) return;
     try {
-      const user1 = await getCurrentUser(user?.email);
-
+      const user1 = await getUserById(user.id);
       setUser1(user1);
       toast.success("you are able to access secured apis");
     } catch (error) {
@@ -207,7 +205,7 @@ export const Userhome = () => {
                       <h2 className="text-xl font-semibold">
                         {user.name || "User"}
                       </h2>
-                      {user.enabled && (
+                      {user.enable && (
                         <Badge
                           variant="secondary"
                           className="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
@@ -236,6 +234,11 @@ export const Userhome = () => {
                               { month: "long", year: "numeric" },
                             )}
                           </span>
+                          {isAdmin(user) && (
+                            <p className="text-sm font-medium text-emerald-500  transition-colors">
+                              {isAdmin(user) ? "Admin" : "User"}
+                            </p>
+                          )}
                         </>
                       )}
                     </div>
@@ -243,18 +246,24 @@ export const Userhome = () => {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 self-start sm:self-center">
-                    <Button size="sm" className="gap-2">
-                      <Settings className="w-3.5 h-3.5" />
-                      Settings
-                    </Button>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button size="sm" variant="outline" className="px-2.5">
-                          <LogOut className="w-4 h-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Sign out</TooltipContent>
-                    </Tooltip>
+                    {isAdmin(user) && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button asChild size="sm" variant="outline">
+                            <NavLink
+                              to="/dashboard/admin/users"
+                              className={({ isActive }) =>
+                                isActive
+                                  ? "text-sm font-medium text-emerald-500 border border-emerald-500 px-3 py-1.5 rounded-md hover:bg-emerald-500/10 transition-colors"
+                                  : ""
+                              }
+                            >
+                              Admin
+                            </NavLink>
+                          </Button>
+                        </TooltipTrigger>
+                      </Tooltip>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -272,13 +281,6 @@ export const Userhome = () => {
           </motion.div>
 
           {/* Main Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Button onClick={getUserData} className="rounded-2xl px-8 text-lg">
-              Get current user
-            </Button>
-
-            <p>{user1?.name}</p>
-          </div>
         </motion.div>
       </motion.div>
     </TooltipProvider>
