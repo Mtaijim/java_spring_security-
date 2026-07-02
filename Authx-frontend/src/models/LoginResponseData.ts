@@ -5,4 +5,6 @@ export default interface LoginResponseData {
   user: User;
   refreshToken: string;
   expiresIn: number;
+  mfaRequired?: boolean;
+  mfaToken?: string;
 }

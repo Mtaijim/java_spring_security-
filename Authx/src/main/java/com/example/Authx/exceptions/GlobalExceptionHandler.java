@@ -46,6 +46,15 @@ private final Logger logger = (Logger) LoggerFactory.getLogger(GlobalExceptionHa
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
 
     }
-
+    @ExceptionHandler(InvalidEmailException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidEmail(
+            InvalidEmailException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST,
+                400
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
 
 }

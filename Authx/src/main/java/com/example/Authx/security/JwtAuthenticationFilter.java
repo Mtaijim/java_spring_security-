@@ -62,7 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
          userRepository.findById(userUuid).ifPresent( user-> {
 //             check for user enabled or not
-            if(user.isEnable()){
+            if(user.isEnabled()){
 
              List<GrantedAuthority> authorities = user.getRoles() == null ? List.of() : user.getRoles().stream()
                      .map(role -> new SimpleGrantedAuthority(role.getName().name())).collect(Collectors.toList());

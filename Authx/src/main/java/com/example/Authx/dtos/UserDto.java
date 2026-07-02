@@ -28,4 +28,6 @@ public class UserDto {
     private Instant updatedAt = Instant.now();
     private Provider provider = Provider.LOCAL;
     private Set<RoleDto> roles = new HashSet<>();
+    private Boolean mfaEnabled = false;
+
 }

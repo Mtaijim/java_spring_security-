@@ -15,7 +15,7 @@ const Navbar = () => {
     <nav className="flex justify-between items-center px-6 py-3 border-b border-border bg-background text-foreground">
       {/* ── Logo ── */}
       <NavLink
-        to="/"
+        to="/dashboard"
         className={({ isActive }) =>
           `flex items-center gap-2 transition-colors ${
             isActive ? "text-primary" : ""
@@ -32,13 +32,7 @@ const Navbar = () => {
         {checkLogin() ? (
           <>
             <ThemeToggle />
-            <NavLink to={"/dashboard"}>
-              <div className="flex items-center hover:underline">
-                <div>
-                  <p>Dashboard</p>
-                </div>
-              </div>
-            </NavLink>
+
             <NavLink to={"/dashboard/profile"}>
               <div className="flex gap-2 justify-center items-center">
                 <div>

@@ -44,11 +44,13 @@ const useAuthStore = create<AuthState>()(
         set({ authLoading: true });
         try {
           const loginResponseData = await loginUser(loginData);
-          set({
-            accessToken: loginResponseData.accessToken,
-            user: loginResponseData.user,
-            authStatus: true,
-          });
+          if (!(loginResponseData as any).mfaRequired) {
+            set({
+              accessToken: loginResponseData.accessToken,
+              user: loginResponseData.user,
+              authStatus: true,
+            });
+          }
           return loginResponseData;
         } finally {
           set({ authLoading: false });

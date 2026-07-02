@@ -47,9 +47,13 @@ const Login = () => {
     try {
       // Call the loginUser function from Authservice.ts
       // console.log("Sending:", loginData);
-      await login(loginData);
+      const response = await login(loginData);
+      if (response.mfaRequired && response.mfaToken) {
+        navigate("/mfa/verify", { state: { mfaToken: response.mfaToken } });
+        return;
+      }
       toast.success("Login success");
-      // const response = await loginUser(loginData);
+      // const response = await loginUser(loginData)
       // console.log("User logged in successfully:", response);
       navigate("/dashboard");
       // Handle successful login (e.g., redirect, store token, etc.)
@@ -122,7 +126,6 @@ const Login = () => {
                   />
                 </div>
               </div>
-
               {/* Password */}
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -139,7 +142,6 @@ const Login = () => {
                   />
                 </div>
               </div>
-
               <Button
                 type="submit"
                 disabled={loading}
@@ -148,16 +150,23 @@ const Login = () => {
                 {loading && <Spinner className="mr-2 h-4 w-4 animate-spin" />}
                 {loading ? "Logging in..." : "Login"}
               </Button>
-
               {/* Divider */}
               <div className="flex items-center gap-4 my-4">
                 <div className="flex-1 h-[1px] bg-border"></div>
                 <span className="text-muted-foreground text-sm">OR</span>
                 <div className="flex-1 h-[1px] bg-border"></div>
               </div>
-
               {/* OAuth Buttons */}
               <OAuthButtons />
+              {/* forget password  */}
+              <div className="flex justify-start">
+                <span
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-sm text-primary cursor-pointer hover:underline"
+                >
+                  Forgot password?
+                </span>
+              </div>{" "}
             </form>
           </CardContent>
         </Card>

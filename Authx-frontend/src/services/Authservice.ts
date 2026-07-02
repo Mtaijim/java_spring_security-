@@ -60,3 +60,16 @@ export const assignRole = async (
   const response = await apiClient.patch(`/users/${userId}/roles`, { role });
   return response.data;
 };
+
+export const forgotPassword = async (email: string) => {
+  const response = await apiClient.post(`/auth/forgot-password`, { email });
+  return response.data;
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+  const response = await apiClient.post(`/auth/reset-password`, {
+    token,
+    newPassword,
+  });
+  return response.data;
+};

@@ -6,5 +6,7 @@ public interface AuthService {
     UserDto registerUser(UserDto userDto);
 
     void verifyEmail(String token);
+    void forgotPassword(String email);
+    void resetPassword(String token , String newPassword);
 
 }

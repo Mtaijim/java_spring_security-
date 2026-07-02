@@ -1,4 +1,5 @@
 package com.example.Authx.entity;
+
 import com.example.Authx.services.UserService;
 import jakarta.persistence.*;
 import lombok.*;
@@ -15,7 +16,7 @@ import java.util.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name= "users")
+@Table(name = "users")
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -26,39 +27,48 @@ public class User implements UserDetails {
     private String name;
     private String password;
     private String image;
-    private boolean enable = true;
+
+    @Builder.Default
+    private Boolean enable = true;
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private Provider provider = Provider.LOCAL;
-    private  String providerId;
+    private String providerId;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
+    @Builder.Default
+    @Column(name = "mfa_enabled", nullable = false)
+    private boolean mfaEnabled = false;
+
+    @Column(name = "totp_secret")
+    private String totpSecret;
+
     @PrePersist
-protected void onCreate(){
+    protected void onCreate() {
         Instant now = Instant.now();
-        if(createdAt == null) createdAt =now;
-        updatedAt=now;
-}
+        if (createdAt == null)
+            createdAt = now;
+        updatedAt = now;
+    }
 
-@PreUpdate
-protected void onUpdate(){
-        updatedAt=Instant.now();
-}
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
+    }
 
-//changed .name for rbac
+    // changed .name for rbac
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-return roles.stream()
-                .map(role ->
-                        new SimpleGrantedAuthority(role
-                                .getName().name())).toList();
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role
+                        .getName().name()))
+                .toList();
     }
 
     @Override
@@ -85,8 +95,5 @@ return roles.stream()
     public boolean isEnabled() {
         return this.enable;
     }
-
-
-
 
 }

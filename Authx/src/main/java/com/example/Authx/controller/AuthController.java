@@ -8,6 +8,7 @@ import com.example.Authx.entity.User;
 import com.example.Authx.repositories.userRepository;
 import com.example.Authx.security.JwtService;
 import com.example.Authx.services.AuthService;
+import com.example.Authx.services.TokenIssuanceService;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.Cookie;
@@ -16,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.antlr.v4.runtime.Token;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,7 @@ import com.example.Authx.entity.RefreshToken;
 import com.example.Authx.repositories.RefreshTokenRepository;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import com.example.Authx.security.CookieService;
@@ -48,44 +51,29 @@ public class AuthController {
     private final ModelMapper modelMapper;
     private final RefreshTokenRepository refreshTokenRepository;
     private final CookieService cookieService;
+    private final TokenIssuanceService tokenIssuanceService;
 
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(
             @RequestBody LoginRequest loginRequest,
             HttpServletResponse response
-
     ) {
-
         Authentication authenticate = authenticate(loginRequest);
-        User user = userRepository.findByEmail(loginRequest.email()).orElseThrow(() -> new BadCredentialsException("Invalid Username or Password"));
+        User user = userRepository.findByEmail(loginRequest.email())
+                .orElseThrow(() -> new BadCredentialsException("Invalid Username or Password"));
 
-        if (!user.isEnable()) {
-            user.setEnable(true);
+        if (!user.isEnabled()) {
             throw new DisabledException("user is disabled");
         }
-        String jti = UUID.randomUUID().toString();
-        var refreshToken = RefreshToken.builder()
-                .jti(jti)
-                .user(user)
-                .createdAt(Instant.now())
-                .expiresAt(Instant.now().plusSeconds(jwtService.getRefreshTtlSeconds()))
-                .revoked(false)
-                .build();
-        refreshTokenRepository.save(refreshToken);
-// generate token
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshtoken = jwtService.generateRefreshToken(user, refreshToken.getJti());
 
-// use cookie service to attach refresh token to response
-        cookieService.attachRefreshCookie(response, refreshtoken, (int) jwtService.getRefreshTtlSeconds());
-        cookieService.addNoStoreHeader(response);
+        if (user.isMfaEnabled()) {
+            String mfaToken = jwtService.generateMfaToken(user.getId().toString());
+            return ResponseEntity.ok(TokenResponse.mfaRequired(mfaToken));
+        }
 
-
-        TokenResponse tokenResponse = TokenResponse.of(accessToken, refreshtoken, jwtService.getAccessTtlSeconds(), modelMapper.map(user, UserDto.class));
-        return ResponseEntity.ok(tokenResponse);
+        return ResponseEntity.ok(tokenIssuanceService.issuesToken(user, response));
     }
-
 
     private Authentication authenticate(LoginRequest loginRequest) {
         try {
@@ -170,7 +158,7 @@ public ResponseEntity<Void> logout(
         });
     cookieService.clearRefreshCookie(response);
     cookieService.addNoStoreHeader(response);
-    SecurityContextHolder.clearContext();;
+    SecurityContextHolder.clearContext();
 
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 }
@@ -221,5 +209,16 @@ public ResponseEntity<Void> logout(
         return ResponseEntity.ok("Email verified successfully . you can now login");
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody Map<String,String> body){
+        authService.forgotPassword(body.get("email"));
+        return ResponseEntity.ok("If that email exists , a reset link has been sent .");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> body) {
+        authService.resetPassword(body.get("token"), body.get("newPassword"));
+        return ResponseEntity.ok("Password reset successfully. You can now login.");
+    }
 
 }

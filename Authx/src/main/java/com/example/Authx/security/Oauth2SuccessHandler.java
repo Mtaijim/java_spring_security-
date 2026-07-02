@@ -49,7 +49,7 @@ public class Oauth2SuccessHandler implements AuthenticationSuccessHandler {
             registrationId = token.getAuthorizedClientRegistrationId();
         }
 
-logger.info("registrationId:",registrationId);
+logger.info("registrationId:{}",registrationId);
         logger.info("user :"+OAuth2user.getAttributes().toString());
         User user ;
         switch (registrationId){
@@ -65,6 +65,7 @@ logger.info("registrationId:",registrationId);
                         .image(picture)
                         .enable(true)
                         .provider(Provider.GOOGLE)
+                        .providerId(googleid)
                         .build();
 
             user = userRepository.findByEmail(emailId).orElseGet(()->userRepository.save(newUser));

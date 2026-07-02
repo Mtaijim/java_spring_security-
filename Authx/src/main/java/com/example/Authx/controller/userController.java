@@ -18,7 +18,8 @@ import java.util.UUID;
 public class userController {
 private final UserService userService;
 
-        @PostMapping()
+    @PostMapping()
+    @PreAuthorize("hasRole('ADMIN')")
         public ResponseEntity<UserDto> createUser (@RequestBody UserDto userDto){
 return ResponseEntity.status(HttpStatus.CREATED).body((userService.createUser(userDto)));
     }

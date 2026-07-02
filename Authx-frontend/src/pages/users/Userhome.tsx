@@ -1,288 +1,126 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import {
-  BarChart3,
-  Users,
-  MessageSquare,
-  Heart,
-  Settings,
-  LogOut,
-  Mail,
-  Calendar,
-  ArrowRight,
-  TrendingUp,
-} from "lucide-react";
-
-// shadcn/ui imports — all tokens resolve automatically in light & dark
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import toast from "react-hot-toast";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import useAuthStore from "@/auth/store";
-import type UserT from "@/models/User";
-import { getUserById } from "@/services/Authservice";
-import { useNavigate } from "react-router";
 import { NavLink } from "react-router";
+import useAuthStore from "@/auth/store";
 import { isAdmin } from "@/utils/roles";
-// -- Stat Card
 
-const StatCard = ({
-  icon: Icon,
-  label,
-  value,
-  trend,
-  delay,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string | number;
-  trend?: string;
-  delay: number;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 16 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay, duration: 0.4, ease: "easeOut" }}
-  >
-    <Card className="hover:shadow-md transition-shadow duration-200">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-3xl font-semibold tracking-tight">{value}</p>
-            {trend && (
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
-                {trend}
-              </p>
-            )}
-          </div>
-          <div className="p-2.5 rounded-lg bg-primary/10">
-            <Icon className="w-5 h-5 text-primary" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  </motion.div>
-);
-// ---Main Component
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export const Userhome = () => {
+import { Clock3, ShieldCheck, Users, UserPen } from "lucide-react";
+
+const Userhome = () => {
   const user = useAuthStore((state) => state.user);
-  const [mounted, setMounted] = useState(false);
-  const [user1, setUser1] = useState<UserT | null>(null);
-  const navigate = useNavigate();
-  const getUserData = async () => {
-    if (!user?.id) return;
-    try {
-      const user1 = await getUserById(user.id);
-      setUser1(user1);
-      toast.success("you are able to access secured apis");
-    } catch (error) {
-      console.log(error);
-      toast.error("error in getting data");
-    }
-  };
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted || !user) {
+  if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-muted border-t-primary" />
+      <div className="flex items-center justify-center min-h-screen">
+        Loading...
       </div>
     );
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-    },
-  };
+  const adminUser = isAdmin(user);
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 16 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4, ease: "easeOut" },
-    },
-  };
-
-  const stats = [
-    {
-      icon: BarChart3,
-      label: "Total Views",
-      value: "2,847",
-      trend: "+12% this week",
-      delay: 0.1,
-    },
-    {
-      icon: Users,
-      label: "Followers",
-      value: "342",
-      trend: "+5 today",
-      delay: 0.15,
-    },
-    {
-      icon: MessageSquare,
-      label: "Messages",
-      value: "28",
-      trend: "4 unread",
-      delay: 0.2,
-    },
-    {
-      icon: Heart,
-      label: "Likes",
-      value: "1,293",
-      trend: "+89 this week",
-      delay: 0.25,
-    },
-  ];
+  const initials = (user.name || user.email || "U")
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
-    <TooltipProvider>
-      <motion.div
-        className="min-h-screen bg-background p-4 md:p-8"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="max-w-6xl mx-auto space-y-8"
-        >
-          {/* Welcome Header */}
-          <motion.div variants={itemVariants}>
-            <h1 className="text-3xl font-semibold tracking-tight">
-              Welcome back, {user.name?.split(" ")[0] || "there"} 👋
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Here's what's happening with your account today.
-            </p>
-          </motion.div>
+    <div className="container max-w-5xl mx-auto px-4 py-8 space-y-6">
+      {/* Welcome Card */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-14 w-14">
+                <AvatarImage src={user.image} />
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
 
-          {/* Profile Card */}
-          <motion.div variants={itemVariants}>
-            <Card>
-              <CardContent className="p-6 md:p-8">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-                  {/* Avatar with online dot */}
-                  <div className="relative">
-                    <Avatar className="w-20 h-20 ring-2 ring-border">
-                      <AvatarImage src={user.image} alt={user.name} />
-                      <AvatarFallback className="text-2xl font-semibold bg-primary text-primary-foreground">
-                        {(user.name || user.email)[0].toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <motion.span
-                      className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-background"
-                      animate={{ scale: [1, 1.25, 1] }}
-                      transition={{
-                        duration: 2.5,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                    />
-                  </div>
+              <div>
+                <h1 className="text-2xl font-bold">
+                  Welcome back, {user.name}
+                </h1>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <h2 className="text-xl font-semibold">
-                        {user.name || "User"}
-                      </h2>
-                      {user.enable && (
-                        <Badge
-                          variant="secondary"
-                          className="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
-                        >
-                          Active
-                        </Badge>
-                      )}
-                      <Badge variant="outline" className="capitalize">
-                        {user.provider}
-                      </Badge>
-                    </div>
+                <p className="text-muted-foreground text-sm">
+                  Manage your AuthX account and security settings.
+                </p>
+              </div>
+            </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <Mail className="w-3.5 h-3.5" />
-                        {user.email}
-                      </span>
-                      {user.createdAt && (
-                        <>
-                          <span className="hidden sm:block text-border">·</span>
-                          <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            Joined{" "}
-                            {new Date(user.createdAt).toLocaleDateString(
-                              "en-US",
-                              { month: "long", year: "numeric" },
-                            )}
-                          </span>
-                          {isAdmin(user) && (
-                            <p className="text-sm font-medium text-emerald-500  transition-colors">
-                              {isAdmin(user) ? "Admin" : "User"}
-                            </p>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
+            <Button asChild>
+              <NavLink to="/dashboard/profile">
+                <UserPen className="mr-2 h-4 w-4" />
+                Edit Profile
+              </NavLink>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 self-start sm:self-center">
-                    {isAdmin(user) && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button asChild size="sm" variant="outline">
-                            <NavLink
-                              to="/dashboard/admin/users"
-                              className={({ isActive }) =>
-                                isActive
-                                  ? "text-sm font-medium text-emerald-500 border border-emerald-500 px-3 py-1.5 rounded-md hover:bg-emerald-500/10 transition-colors"
-                                  : ""
-                              }
-                            >
-                              Admin
-                            </NavLink>
-                          </Button>
-                        </TooltipTrigger>
-                      </Tooltip>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+      {/* Last Login */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock3 className="h-5 w-5" />
+            Last Login
+          </CardTitle>
+        </CardHeader>
 
-          {/* Stats Grid */}
-          <motion.div
-            variants={itemVariants}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4"
-          >
-            {stats.map((s) => (
-              <StatCard key={s.label} {...s} />
-            ))}
-          </motion.div>
+        <CardContent>
+          <p className="font-medium">{new Date().toLocaleString()}</p>
 
-          {/* Main Content */}
-        </motion.div>
-      </motion.div>
-    </TooltipProvider>
+          <p className="text-sm text-muted-foreground mt-1 capitalize">
+            Signed in via {user.provider}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* About AuthX */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5" />
+            About AuthX
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="flex justify-center items-center">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            AuthX is a secure authentication platform built with React, Spring
+            Boot, JWT, OAuth2, RBAC, email verification, password reset and
+            profile management.
+          </p>
+          <Button> About</Button>
+        </CardContent>
+      </Card>
+
+      {/* Admin Features */}
+      {adminUser && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Admin Features
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>• User Management</li>
+              <li>• CRUD Operations</li>
+              <li>• Role Management</li>
+              <li>• Permission Control</li>
+              <li>• Account Status Management</li>
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
+
+export default Userhome;

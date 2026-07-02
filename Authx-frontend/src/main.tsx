@@ -9,7 +9,7 @@ import About from "./pages/About.tsx";
 import { Services } from "./pages/Services.tsx";
 import RootLayout from "./pages/RootLayout.tsx";
 import Dashboard from "./pages/users/Dashboard.tsx";
-import { Userhome } from "./pages/users/Userhome.tsx";
+import Userhome from "./pages/users/Userhome.tsx";
 import Userprofile from "./pages/users/Userprofile.tsx";
 import OAuthScucess from "./pages/OAuthScucess.tsx";
 import OAuthFailure from "./pages/OAuthFailure.tsx";
@@ -18,6 +18,10 @@ import AdminUserList from "./pages/users/AdminUserList.tsx";
 import VerifyEmail from "./pages/VerifyEmail.tsx";
 import CheckEmail from "./pages/users/CheckEmail.tsx";
 import { ThemeProvider } from "./components/ThemeProvider.tsx";
+import ForgotPassword from "./pages/ForgotPassword.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
+import MfaChallenges from "./pages/MfaChallenges.tsx";
+import MfaSetup from "./pages/users/MfaSetup.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -29,9 +33,12 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/mfa/verify" element={<MfaChallenges />} />
+
           <Route path="/dashboard" element={<Dashboard />}>
             <Route index element={<Userhome />} />
             <Route path="profile" element={<Userprofile />} />
+            <Route path="mfa/setup" element={<MfaSetup />} />
             <Route element={<AdminRoute />}>
               <Route path="admin/users" element={<AdminUserList />} />
             </Route>
@@ -40,6 +47,8 @@ createRoot(document.getElementById("root")!).render(
           <Route path="oauth/failure" element={<OAuthFailure />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/check-email" element={<CheckEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
       </Routes>
     </ThemeProvider>
