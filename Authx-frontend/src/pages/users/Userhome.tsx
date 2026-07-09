@@ -94,7 +94,9 @@ const Userhome = () => {
             Boot, JWT, OAuth2, RBAC, email verification, password reset and
             profile management.
           </p>
-          <Button> About</Button>
+          <NavLink to="/about">
+            <Button> About </Button>
+          </NavLink>
         </CardContent>
       </Card>
 

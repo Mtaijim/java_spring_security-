@@ -269,67 +269,7 @@ const UserProfile: React.FC = () => {
                 </div>
               </div>
 
-              {/* Phone */}
-              <div className="space-y-1.5">
-                <Label htmlFor="phone" className="text-sm">
-                  Phone Number
-                </Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    id="phone"
-                    value={isEditing ? form.phone : (user as any).phone || ""}
-                    onChange={(e) => setField("phone", e.target.value)}
-                    readOnly={!isEditing}
-                    placeholder="+1 (555) 000-0000"
-                    className={`pl-9 ${!isEditing ? "bg-muted/50 cursor-default" : ""}`}
-                  />
-                </div>
-              </div>
-
-              {/* Organization */}
-              <div className="space-y-1.5">
-                <Label htmlFor="organization" className="text-sm">
-                  Organization
-                </Label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    id="organization"
-                    value={
-                      isEditing
-                        ? form.organization
-                        : (user as any).organization || ""
-                    }
-                    onChange={(e) => setField("organization", e.target.value)}
-                    readOnly={!isEditing}
-                    placeholder="Acme Corp"
-                    className={`pl-9 ${!isEditing ? "bg-muted/50 cursor-default" : ""}`}
-                  />
-                </div>
-              </div>
-
               {/* Timezone */}
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="timezone" className="text-sm">
-                  Timezone
-                </Label>
-                <div className="relative">
-                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    id="timezone"
-                    value={
-                      isEditing
-                        ? form.timezone
-                        : (user as any).timezone || detectedTimezone
-                    }
-                    onChange={(e) => setField("timezone", e.target.value)}
-                    readOnly={!isEditing}
-                    placeholder="America/New_York"
-                    className={`pl-9 ${!isEditing ? "bg-muted/50 cursor-default" : ""}`}
-                  />
-                </div>
-              </div>
             </div>
 
             {/* Bio — full width */}

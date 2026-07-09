@@ -86,6 +86,26 @@ const Navbar = () => {
             >
               Home
             </NavLink>
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                `text-sm font-medium transition-colors hover:text-foreground ${
+                  isActive ? "text-foreground" : "text-muted-foreground"
+                }`
+              }
+            >
+              About
+            </NavLink>
+            <NavLink
+              to="/services"
+              className={({ isActive }) =>
+                `text-sm font-medium transition-colors hover:text-foreground ${
+                  isActive ? "text-foreground" : "text-muted-foreground"
+                }`
+              }
+            >
+              Services
+            </NavLink>
 
             <NavLink to="/login">
               <Button size="sm" variant="outline" className="cursor-pointer">

@@ -69,7 +69,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
              UsernamePasswordAuthenticationToken authentication =
                      new UsernamePasswordAuthenticationToken(
-                     user.getEmail(),
+                     user,
                      null,
                      authorities
              );
@@ -90,7 +90,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        return request.getRequestURI().startsWith("/api/v1/auth");
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return uri.startsWith("/api/v1/auth/login") ||
+                uri.startsWith("/api/v1/auth/register") ||
+                uri.startsWith("/api/v1/auth/forgot-password") ||
+                uri.startsWith("/api/v1/auth/reset-password");
     }
 }
