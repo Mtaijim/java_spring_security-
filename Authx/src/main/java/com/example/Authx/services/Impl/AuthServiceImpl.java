@@ -1,16 +1,18 @@
 package com.example.Authx.services.Impl;
 
+import com.example.Authx.dtos.AuthResponse;
+import com.example.Authx.dtos.LoginRequest;
 import com.example.Authx.dtos.RoleDto;
 import com.example.Authx.dtos.UserDto;
 import com.example.Authx.entity.*;
+import com.example.Authx.helper.DeviceParser;
 import com.example.Authx.repositories.EmailVerificationTokenRepository;
 import com.example.Authx.repositories.PasswordResetTokenRepository;
 import com.example.Authx.repositories.userRepository;
-import com.example.Authx.services.AuthService;
-import com.example.Authx.services.EmailService;
-import com.example.Authx.services.Emailvalidator;
-import com.example.Authx.services.UserService;
+import com.example.Authx.security.JwtService;
+import com.example.Authx.services.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
@@ -32,6 +34,10 @@ public class AuthServiceImpl implements AuthService {
     private final  userRepository userRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final Emailvalidator emailvalidator;
+    private final JwtService jwtServices;
+//    login services
+    private final LoginEventServices loginEventServices;
+    private final DeviceParser deviceParser;
 
     @Override
     public UserDto registerUser(UserDto userDto) {
@@ -112,5 +118,25 @@ public class AuthServiceImpl implements AuthService {
 
      resetToken.setUsed(true);
      passwordResetTokenRepository.save(resetToken);
+    }
+    public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest){
+        User user = userRepository.findByEmail(request.email()).orElseThrow(()->new RuntimeException("Invalid Email or Password "));
+
+    if(!user.isEnabled()){
+        throw new RuntimeException("please verify your email first .");
+    }
+
+    if(!passwordEncoder.matches(request.password(),user.getPassword())){
+      loginEventServices.recordFailure(user,httpRequest,"invalid password");
+        throw new RuntimeException("Invalid email or password");
+    }
+loginEventServices.recordSucess(user, httpRequest);
+
+        String token = jwtServices.generateAccessToken(user);
+        UserDto userDto = userService.getUserById(user.getId().toString());
+        return AuthResponse.builder()
+                .accessToken(token)
+                .user(userDto)
+                .build();
     }
 }

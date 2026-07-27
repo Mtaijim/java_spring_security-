@@ -8,6 +8,7 @@ import com.example.Authx.entity.User;
 import com.example.Authx.repositories.userRepository;
 import com.example.Authx.security.JwtService;
 import com.example.Authx.services.AuthService;
+import com.example.Authx.services.LoginEventServices;
 import com.example.Authx.services.TokenIssuanceService;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -52,42 +53,49 @@ public class AuthController {
     private final RefreshTokenRepository refreshTokenRepository;
     private final CookieService cookieService;
     private final TokenIssuanceService tokenIssuanceService;
+    private final LoginEventServices loginEventServices;
 
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(
             @RequestBody LoginRequest loginRequest,
-            HttpServletResponse response
+            HttpServletResponse response, HttpServletRequest request
     ) {
-        Authentication authenticate = authenticate(loginRequest);
-        User user = userRepository.findByEmail(loginRequest.email())
-                .orElseThrow(() -> new BadCredentialsException("Invalid Username or Password"));
-
-        if (!user.isEnabled()) {
-            throw new DisabledException("user is disabled");
-        }
-
-        if (user.isMfaEnabled()) {
-            String mfaToken = jwtService.generateMfaToken(user.getId().toString());
-            return ResponseEntity.ok(TokenResponse.mfaRequired(mfaToken));
-        }
-
-        return ResponseEntity.ok(tokenIssuanceService.issuesToken(user, response));
-    }
-
-    private Authentication authenticate(LoginRequest loginRequest) {
+        User user = null;
         try {
-            return authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.email(),
-                            loginRequest.password()
-                    )
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
             );
-        } catch (Exception e) {
-            e.printStackTrace(); // IMPORTANT
+            user = userRepository.findByEmail(loginRequest.email()).orElseThrow(() ->
+                    new BadCredentialsException("invalid credentials"));
+
+            if (!user.isEnabled()) {
+                throw new DisabledException("user is Disabled ");
+
+            }
+            if (user.isMfaEnabled()) {
+                String mfaToken = jwtService.generateMfaToken(user.getId().toString());
+                return ResponseEntity.ok(TokenResponse.mfaRequired(mfaToken));
+            }
+
+//            record success
+
+            loginEventServices.recordSucess(user, request);
+            return ResponseEntity.ok(tokenIssuanceService.issuesToken(user, response));
+
+
+        } catch (BadCredentialsException | DisabledException e) {
+            if (user == null) {
+                user = userRepository.findByEmail(loginRequest.email()).orElse(null);
+            }
+            if (user != null) {
+                loginEventServices.recordFailure(user, request, e.getMessage());
+            }
             throw e;
+
         }
     }
+
 
 
     //access and refresh token regeneration endpoint

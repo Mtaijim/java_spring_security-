@@ -3,7 +3,7 @@ import { Button } from "./ui/button.tsx";
 import { NavLink, useNavigate } from "react-router";
 import { isAdmin } from "@/utils/roles";
 import { ThemeToggle } from "./ThemeToggle.tsx";
-import { User } from "lucide-react";
+import { User, History } from "lucide-react";
 
 const Navbar = () => {
   const checkLogin = useAuthStore((state) => state.checkLogin);
@@ -47,6 +47,16 @@ const Navbar = () => {
                   )}
                 </div>{" "}
               </div>
+            </NavLink>
+            <NavLink
+              to="/dashboard/history"
+              className={({ isActive }) =>
+                `flex items-center gap-2 text-sm font-medium transition-colors
+     ${isActive ? "text-foreground" : "text-muted-foreground"}`
+              }
+            >
+              <History className="w-4 h-4" />
+              Login History
             </NavLink>
 
             {isAdmin(user) && (

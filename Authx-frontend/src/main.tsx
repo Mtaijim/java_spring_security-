@@ -22,6 +22,7 @@ import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import MfaChallenges from "./pages/MfaChallenges.tsx";
 import MfaSetup from "./pages/users/MfaSetup.tsx";
+import { LoginHistory } from "./pages/LoginHistory.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -36,6 +37,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/mfa/verify" element={<MfaChallenges />} />
 
           <Route path="/dashboard" element={<Dashboard />}>
+            <Route path="/dashboard/history" element={<LoginHistory />} />
             <Route index element={<Userhome />} />
             <Route path="profile" element={<Userprofile />} />
             <Route path="mfa/setup" element={<MfaSetup />} />
