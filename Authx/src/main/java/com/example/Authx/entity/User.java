@@ -3,11 +3,13 @@ package com.example.Authx.entity;
 import com.example.Authx.services.UserService;
 import jakarta.persistence.*;
 import lombok.*;
+import net.minidev.json.annotate.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Getter
@@ -40,6 +42,7 @@ public class User implements UserDetails {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    @JsonIgnore
     private Set<Role> roles = new HashSet<>();
 
     @Builder.Default
@@ -81,10 +84,7 @@ public class User implements UserDetails {
         return true;
     }
 
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+
 
     @Override
     public boolean isCredentialsNonExpired() {
@@ -95,5 +95,38 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return this.enable;
     }
+
+
+// rate limiting fields
+
+    @Column(name = "failed_attempts",nullable = false)
+    @Builder.Default
+    private Integer failedAttempts = 0;
+
+
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
+
+ public boolean isAccountLocked(){
+     return lockedUntil != null && lockedUntil.isAfter(LocalDateTime.now());
+ }
+    @Override
+    public boolean isAccountNonLocked() {
+        return !isAccountLocked();
+    }
+ public void incrementFailedAttempts(){
+     this.failedAttempts =
+             (this.failedAttempts == null ?
+                     0 : this.failedAttempts) + 1;
+ }
+
+ public void resetLockout(){
+     this.failedAttempts = 0 ;
+     this.lockedUntil = null;
+ }
+ public void lockFor(int minutes){
+     this.lockedUntil = LocalDateTime.now().plusMinutes(minutes);
+ }
+
 
 }

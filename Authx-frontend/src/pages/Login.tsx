@@ -59,9 +59,25 @@ const Login = () => {
       // Handle successful login (e.g., redirect, store token, etc.)
     } catch (error: any) {
       console.error("Error logging in:", error);
-      console.error("Status:", error.response?.status);
-      console.error("Response:", error.response?.data);
-      console.error("Full error:", error);
+      const status = error.response?.status;
+      const message = error.response?.data?.message || "Login failed";
+      if (status === 401) {
+        setError("Invalid email or password.");
+
+        return;
+      }
+
+      if (status === 429) {
+        setError(
+          "Too many login attempts. Please wait 15 minutes before trying again.",
+        );
+        return;
+      }
+
+      if (status === 403) {
+        setError("Your account is locked. please verify your email ");
+        return;
+      }
 
       setError(error.response?.data?.message || "Login failed");
     } finally {

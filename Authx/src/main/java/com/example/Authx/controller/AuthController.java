@@ -7,6 +7,7 @@ import com.example.Authx.dtos.UserDto;
 import com.example.Authx.entity.User;
 import com.example.Authx.repositories.userRepository;
 import com.example.Authx.security.JwtService;
+import com.example.Authx.services.AccountLockoutService;
 import com.example.Authx.services.AuthService;
 import com.example.Authx.services.LoginEventServices;
 import com.example.Authx.services.TokenIssuanceService;
@@ -54,6 +55,7 @@ public class AuthController {
     private final CookieService cookieService;
     private final TokenIssuanceService tokenIssuanceService;
     private final LoginEventServices loginEventServices;
+    private final AccountLockoutService lockoutService;
 
 
     @PostMapping("/login")
@@ -64,9 +66,11 @@ public class AuthController {
         User user = null;
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password())
+                    new UsernamePasswordAuthenticationToken(loginRequest.email(),
+                            loginRequest.password())
             );
-            user = userRepository.findByEmail(loginRequest.email()).orElseThrow(() ->
+            user = userRepository.findByEmail(loginRequest.email())
+                            .orElseThrow(() ->
                     new BadCredentialsException("invalid credentials"));
 
             if (!user.isEnabled()) {
@@ -78,18 +82,40 @@ public class AuthController {
                 return ResponseEntity.ok(TokenResponse.mfaRequired(mfaToken));
             }
 
-//            record success
 
+
+
+
+//            record success
+           lockoutService.handleSuccess(user);
             loginEventServices.recordSucess(user, request);
             return ResponseEntity.ok(tokenIssuanceService.issuesToken(user, response));
 
 
         } catch (BadCredentialsException | DisabledException e) {
             if (user == null) {
-                user = userRepository.findByEmail(loginRequest.email()).orElse(null);
+                user = userRepository
+                        .findByEmail(loginRequest.email())
+                        .orElse(null);
             }
             if (user != null) {
-                loginEventServices.recordFailure(user, request, e.getMessage());
+
+                lockoutService.handleFailedAttempt(user);
+                loginEventServices.recordFailure(user,
+                        request, e.getMessage());
+
+                int remaining = lockoutService.remainingAttempts(user);
+                if(remaining>0){
+                    throw new BadCredentialsException(
+                            "Invalid password"+
+                                    remaining +"attempt" +
+                                    (remaining>1 ? "s" : "") + "remaining."
+                    );
+                }else {
+                    throw new BadCredentialsException(
+                            "Account locked for 15 min"
+                    );
+                }
             }
             throw e;
 

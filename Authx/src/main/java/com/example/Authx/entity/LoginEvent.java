@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import net.minidev.json.annotate.JsonIgnore;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,6 +25,7 @@ public class LoginEvent {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name= "user_id")
+    @JsonIgnore
     private User user ;
 
     @Column(name = "ipAddress")

@@ -20,8 +20,14 @@ export const LoginHistory = () => {
   useEffect(() => {
     apiClient
       .get("/auth/history")
-      .then((res) => setEvents(res.data))
-      .catch(() => {})
+      .then((res) => {
+        console.log("History response:", res.data); // ← ADD
+        console.log("Length:", res.data.length);
+        setEvents(res.data);
+      })
+      .catch((err) => {
+        console.error("History error:", err);
+      })
       .finally(() => setLoading(false));
   }, []);
 

@@ -5,6 +5,7 @@ package com.example.Authx.config;
 import com.example.Authx.dtos.ApiError;
 import com.example.Authx.security.JwtAuthenticationFilter;
 import com.example.Authx.security.Oauth2SuccessHandler;
+import com.example.Authx.security.RateLimitFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,6 +52,7 @@ public class securityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final Oauth2SuccessHandler successHandler;
+    private final RateLimitFilter rateLimitFilter;
 
   @Bean
 public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -67,7 +69,10 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             .oauth2Login(oauth2-> oauth2.successHandler(successHandler)
                     .failureHandler(null))
             .logout(AbstractHttpConfigurer::disable)
-         .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, e) -> {
+         .exceptionHandling(ex ->
+                 ex.authenticationEntryPoint((request,
+                                              response,
+                                              e) -> {
                     e.printStackTrace();
                     response.setStatus(401);
                     response.setContentType("application/json");
@@ -82,7 +87,10 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
         var objectMapper = new ObjectMapper();
 response.getWriter().write(objectMapper.writeValueAsString(apiError));
     }
-                )).addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                ))
+            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
                 .build();
 }
 
