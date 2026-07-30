@@ -18,4 +18,5 @@ public interface LoginEventRepository extends JpaRepository<LoginEvent, UUID> {
             LocalDateTime after
     );
 
+    List<LoginEvent> findTop10ByUserAndStatusOrderByCreatedAtDesc(User user, LoginEvent.LoginStatus loginStatus);
 }

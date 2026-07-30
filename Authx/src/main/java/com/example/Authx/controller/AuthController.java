@@ -5,12 +5,10 @@ import com.example.Authx.dtos.RefreshTokenRequest;
 import com.example.Authx.dtos.TokenResponse;
 import com.example.Authx.dtos.UserDto;
 import com.example.Authx.entity.User;
+import com.example.Authx.helper.DeviceParser;
 import com.example.Authx.repositories.userRepository;
 import com.example.Authx.security.JwtService;
-import com.example.Authx.services.AccountLockoutService;
-import com.example.Authx.services.AuthService;
-import com.example.Authx.services.LoginEventServices;
-import com.example.Authx.services.TokenIssuanceService;
+import com.example.Authx.services.*;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.Cookie;
@@ -56,7 +54,9 @@ public class AuthController {
     private final TokenIssuanceService tokenIssuanceService;
     private final LoginEventServices loginEventServices;
     private final AccountLockoutService lockoutService;
-
+    private final TokenBlacklistService tokenBlacklistService;
+    private final SuspiciousLoginService suspiciousLoginService;
+    private final DeviceParser deviceParser;
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(
@@ -82,13 +82,16 @@ public class AuthController {
                 return ResponseEntity.ok(TokenResponse.mfaRequired(mfaToken));
             }
 
-
-
-
-
 //            record success
            lockoutService.handleSuccess(user);
             loginEventServices.recordSucess(user, request);
+            // @Async means this runs without blocking response
+            suspiciousLoginService.checkAndAlert(
+                    user,
+                    deviceParser.parseDevice(request),
+                    deviceParser.parseOs(request),
+                    deviceParser.parseIp(request)
+            );
             return ResponseEntity.ok(tokenIssuanceService.issuesToken(user, response));
 
 
@@ -177,6 +180,32 @@ public ResponseEntity<Void> logout(
         HttpServletRequest request,
         HttpServletResponse response
 ){
+//        blacklist the access token
+    String authHeader = request.getHeader("Authorization");
+    if(authHeader != null && authHeader.startsWith("Bearer ")){
+        String accessToken = authHeader.substring(7);
+        try{
+            if(jwtService.isAccessToken(accessToken)){
+                String jti = jwtService.getJti(accessToken);
+
+
+//                get expiry from token
+
+                Instant expiresAt = jwtService
+                        .parse(accessToken)
+                        .getPayload()
+                        .getExpiration()
+                        .toInstant();
+
+//                add to blacklist
+tokenBlacklistService.blacklist(jti,expiresAt);
+
+            }
+        }catch (Exception ignored){}
+    }
+
+
+
         readRefreshTokenFromRequest(null,request).ifPresent(token -> {
             try{
                 if (jwtService.isRefreshToken(token)){

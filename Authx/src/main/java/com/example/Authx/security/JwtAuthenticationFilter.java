@@ -2,6 +2,7 @@ package com.example.Authx.security;
 
 import com.example.Authx.helper.UserHelper;
 import com.example.Authx.repositories.userRepository;
+import com.example.Authx.services.TokenBlacklistService;
 import io.jsonwebtoken.*;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -34,6 +35,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final userRepository userRepository;
     private Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private final TokenBlacklistService tokenBlacklistService;
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -52,7 +55,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
               filterChain.doFilter(request,response);
               return;
           }
+// get jti from token
+          String jti = jwtService.getJti(token);
 
+//          is this token is blacklisted ?
+          if(tokenBlacklistService.isBlacklisted(jti)){
+              request.setAttribute(
+                      "error","Toen has been revoked"
+              );
+              filterChain.doFilter(request,response);
+              return;
+          }
 
           Jws<Claims> parse = jwtService.parse(token);
          Claims payload = parse.getPayload();
