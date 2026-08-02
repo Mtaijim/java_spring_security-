@@ -8,6 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.security.Permission;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -68,10 +69,25 @@ public class User implements UserDetails {
     // changed .name for rbac
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream()
-                .map(role -> new SimpleGrantedAuthority(role
-                        .getName().name()))
-                .toList();
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        roles.stream()
+                .map(role -> new SimpleGrantedAuthority(
+                        role.getName().name()))
+                .forEach(authorities::add);
+
+        roles.stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(permission -> new SimpleGrantedAuthority(permission.getName()))
+                .forEach(authorities::add);
+
+        if(permissions != null) {
+            permissions.stream()
+                    .map(permission ->
+                            new SimpleGrantedAuthority(permission
+                                    .getName()))
+                    .forEach(authorities::add);
+        }
+        return authorities;
     }
 
     @Override
@@ -128,5 +144,13 @@ public class User implements UserDetails {
      this.lockedUntil = LocalDateTime.now().plusMinutes(minutes);
  }
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_permissions",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id")
+    )
+    @Builder.Default
+    private Set<AppPermission> permissions = new HashSet<>();
 
 }

@@ -1,6 +1,6 @@
 package com.example.Authx.services;
 
-import com.example.Authx.entity.BlackListedToken;
+import com.example.Authx.entity.BlacklistedToken;
 import com.example.Authx.repositories.BlacklistedTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ public class TokenBlacklistService {
             return;
         }
 
-        BlackListedToken token  = BlackListedToken.builder()
+        BlacklistedToken token  = BlacklistedToken.builder()
                 .jti(jti)
                 .expiresAt(expiresAt).build();
 

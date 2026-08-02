@@ -62,9 +62,14 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(AppConstants.AUTH_PUBLIC_URLS).permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/v1/users").hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").hasRole("ADMIN")  .anyRequest()
-                    .authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/users")
+                    .hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**")
+                    .hasAnyAuthority("ROLE_ADMIN", "users_delete")
+                    .requestMatchers("/api/v1/permissions/**")
+                    .hasRole("ADMIN")
+
+                    .anyRequest().authenticated()
             )
             .oauth2Login(oauth2-> oauth2.successHandler(successHandler)
                     .failureHandler(null))

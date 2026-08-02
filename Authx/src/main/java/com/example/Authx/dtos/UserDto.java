@@ -1,5 +1,6 @@
 package com.example.Authx.dtos;
 
+import com.example.Authx.entity.AppPermission;
 import com.example.Authx.entity.Provider;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
@@ -29,5 +30,5 @@ public class UserDto {
     private Provider provider = Provider.LOCAL;
     private Set<RoleDto> roles = new HashSet<>();
     private Boolean mfaEnabled = false;
-
+private Set<AppPermission> permissions = new HashSet<>();
 }

@@ -20,7 +20,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BlackListedToken {
+public class BlacklistedToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
