@@ -61,14 +61,17 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             .cors(Customizer.withDefaults())
             .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(AppConstants.AUTH_PUBLIC_URLS).permitAll()
+                    .requestMatchers(AppConstants.AUTH_PUBLIC_URLS)
+                    .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/users")
                     .hasRole("ADMIN")
                     .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**")
                     .hasAnyAuthority("ROLE_ADMIN", "users_delete")
                     .requestMatchers("/api/v1/permissions/**")
+
                     .hasRole("ADMIN")
 
+                    .requestMatchers("/api/v1/orgs/**").authenticated()
                     .anyRequest().authenticated()
             )
             .oauth2Login(oauth2-> oauth2.successHandler(successHandler)
