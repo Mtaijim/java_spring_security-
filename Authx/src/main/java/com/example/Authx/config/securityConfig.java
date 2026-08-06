@@ -72,6 +72,8 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
                     .hasRole("ADMIN")
 
                     .requestMatchers("/api/v1/orgs/**").authenticated()
+
+                    .requestMatchers("/api/v1/admin/audit/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
             )
             .oauth2Login(oauth2-> oauth2.successHandler(successHandler)

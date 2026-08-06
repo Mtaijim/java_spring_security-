@@ -1,7 +1,6 @@
 package com.example.Authx.helper;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.core.userdetails.memory.UserAttribute;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,7 +18,6 @@ public class DeviceParser {
         if(userAgent.contains("Chrome"))  return "Chrome";
         if(userAgent.contains("Firefox")) return "Firefox";
         if(userAgent.contains("Safari"))  return "Safari";
-        if(userAgent.contains("Edge"))    return "Edge";
         if(userAgent.contains("MSIE") || userAgent.contains("Trident")) {
             return "Internet Explorer";
         }

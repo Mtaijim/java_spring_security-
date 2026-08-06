@@ -3,10 +3,7 @@ package com.example.Authx.services;
 
 import com.example.Authx.dtos.OrgDto;
 import com.example.Authx.dtos.mfa.OrgMemberDto;
-import com.example.Authx.entity.OrgMembership;
-import com.example.Authx.entity.OrgRole;
-import com.example.Authx.entity.Organization;
-import com.example.Authx.entity.User;
+import com.example.Authx.entity.*;
 import com.example.Authx.repositories.OrganizationRepository;
 import com.example.Authx.repositories.OrgMembershipRepository;
 import com.example.Authx.repositories.userRepository;
@@ -25,9 +22,10 @@ public class OrganizationService {
     private final OrgMembershipRepository orgMembershipRepository;
     private final OrganizationRepository organizationRepository;
     private final  userRepository userRepository;
+    private final AuditLogService auditLogService;
 
     @Transactional
-    public OrgDto createOrg(String name, String description, User creator ){
+    public OrgDto createOrg(String name, String description, User creator ,String ip , String agent ){
         String slug = generateSlug(name);
         if(organizationRepository.existsBySlug(slug)){
             slug = slug + "-"+ UUID.randomUUID().toString().substring(0,4);
@@ -49,6 +47,16 @@ public class OrganizationService {
                 .role(OrgRole.OWNER)
                 .invitedBy(creator).build();
         orgMembershipRepository.save(membership);
+        auditLogService.log(
+                org.getId(),
+                creator.getId(),
+                creator.getEmail(),
+                AuditAction.CREATE_ORGANIZATION,
+                "ORGANIZATION",
+                org.getId().toString(),
+                "Organization created: " + org.getName(),
+                ip, agent
+        );
         return toDto(org,OrgRole.OWNER,1L);
     }
 // get all orgs for curr User
@@ -67,7 +75,8 @@ public class OrganizationService {
 
 //    invite members to org
 @Transactional
-public void inviteMember(UUID orgId, String email,OrgRole role,User invitedBy)
+public void inviteMember(UUID orgId, String email,OrgRole role
+        ,User invitedBy,String ip , String agent)
 {
     Organization org= organizationRepository.findById(orgId)
             .orElseThrow(()-> new RuntimeException("organization not found "));
@@ -105,6 +114,16 @@ public void inviteMember(UUID orgId, String email,OrgRole role,User invitedBy)
             .invitedBy(invitedBy)
             .build();
     orgMembershipRepository.save(membership);
+    auditLogService.log(
+            org.getId(),
+            invitedBy.getId(),
+            invitedBy.getEmail(),
+            AuditAction.INVITE_MEMBER,
+            "MEMBERSHIP",
+            membership.getId().toString(),
+            "Invited " + invitedUser.getEmail() + " as " + role,
+            ip, agent
+    );
 
 }
 // get all members of org
@@ -131,7 +150,8 @@ public void inviteMember(UUID orgId, String email,OrgRole role,User invitedBy)
     }
 // change member role
     @Transactional
-    public void changeMemberRole(UUID orgId, UUID targetId, OrgRole newRole, User requestBy){
+    public void changeMemberRole(UUID orgId, UUID targetId,
+                                 OrgRole newRole, User requestBy, String ip, String agent){
 
       Organization org = organizationRepository.findById(orgId)
               .orElseThrow(()-> new RuntimeException("Organization not found"));
@@ -164,17 +184,26 @@ User targetUser = userRepository.findById(targetId)
                     "Cannot change OWNER's role"
             );
         }
+        OrgRole oldRole = target.getRole();
         target.setRole(newRole);
         orgMembershipRepository.save(target);
-
+        auditLogService.log(
+                org.getId(),
+                requestBy.getId(),
+                requestBy.getEmail(),
+                AuditAction.CHANGE_ROLE,
+                "MEMBERSHIP",
+                target.getId().toString(),
+                "Role changed for " + targetUser.getEmail() + ": " + oldRole + " → " + newRole,
+                ip, agent
+        );
 
     }
     //        remove member from org
 
-
-
 @Transactional
- public void removeMember(UUID orgId, UUID targetId, User requestedBy){
+ public void removeMember(UUID orgId, UUID targetId, User requestedBy
+, String ip, String agent){
         Organization org = organizationRepository.findById(orgId)
                 .orElseThrow(()->
                         new RuntimeException(" Organization not found "));
@@ -199,11 +228,24 @@ User targetUser = userRepository.findById(targetId)
      if(targetMembership.getRole() == OrgRole.OWNER){
          throw new RuntimeException("Cannot remove Owner");
      }
-     orgMembershipRepository.save(targetMembership);
+
+    auditLogService.log(
+            org.getId(),
+            requestedBy.getId(),
+            requestedBy.getEmail(),
+            AuditAction.REMOVE_MEMBER,
+            "MEMBERSHIP",
+            targetMembership.getId().toString(),
+            "Removed member: " + targetUser.getEmail(),
+            ip, agent
+    );
+
+     orgMembershipRepository.delete(targetMembership);
  }
     //        delete org
 
-    public void deleteOrg(UUID orgId , User requestedBy){
+    @Transactional
+    public void deleteOrg(UUID orgId , User requestedBy,String ip , String agent){
         Organization org = organizationRepository.findById(orgId)
                 .orElseThrow(()->new RuntimeException("organization not found "));
 
@@ -214,6 +256,17 @@ User targetUser = userRepository.findById(targetId)
         if(membership.getRole() != OrgRole.OWNER){
             throw new RuntimeException("Only owner can Delete Organization");
         }
+
+        auditLogService.log(
+                org.getId(),
+                requestedBy.getId(),
+                requestedBy.getEmail(),
+                AuditAction.DELETE_ORGANIZATION,
+                "ORGANIZATION",
+                org.getId().toString(),
+                "Organization deleted: " + org.getName(),
+                ip, agent
+        );
 //delete all member of org
         orgMembershipRepository.findByOrganization(org)
                 .forEach(orgMembershipRepository::delete);

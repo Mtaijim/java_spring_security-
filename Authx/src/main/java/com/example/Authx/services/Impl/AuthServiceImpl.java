@@ -38,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
 //    login services
     private final LoginEventServices loginEventServices;
     private final DeviceParser deviceParser;
+    private final AuditLogService auditLogService;
 
     @Override
     public UserDto registerUser(UserDto userDto) {
@@ -53,6 +54,18 @@ public class AuthServiceImpl implements AuthService {
                 .expiresAt(Instant.now().plusSeconds(86400)).build();
         tokenRepository.save(verificationToken);
         emailService.sendVerificationEmail(savedUser.getEmail(), token);
+
+//        audit logs
+        auditLogService.log(
+                null,
+                savedUser.getId(),
+                savedUser.getEmail(),
+                AuditAction.REGISTER,
+                "USER",
+                savedUser.getId().toString(),
+                "New account registered",
+                null, null   );
+
         return savedUser;
     }
 

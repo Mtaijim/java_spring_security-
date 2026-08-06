@@ -5,7 +5,9 @@ import com.example.Authx.dtos.mfa.OrgMemberDto;
 import com.example.Authx.entity.OrgRole;
 import com.example.Authx.entity.User;
 import com.example.Authx.services.OrganizationService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import com.example.Authx.helper.RequestHelper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,13 +27,16 @@ public class OrganizationController {
     @PostMapping
     public ResponseEntity<OrgDto> create(
             @RequestBody Map<String ,String> body,
-            @AuthenticationPrincipal User user
+            @AuthenticationPrincipal User user,
+            HttpServletRequest request
             ){
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(organizationService.createOrg(
                         body.get("name"),
                         body.get("description"),
-                        user
+                        user,
+                      (RequestHelper.getClientIp(request)),
+                        request.getHeader("User-Agent")
                 ));
     }
 
@@ -58,13 +63,15 @@ public class OrganizationController {
     public ResponseEntity<String> invite(
             @PathVariable UUID orgId,
             @RequestBody Map<String,String> body,
-            @AuthenticationPrincipal User user
+            @AuthenticationPrincipal User user,HttpServletRequest request
     ){
         organizationService.inviteMember(
                 orgId,
                 body.get("email"),
                 OrgRole.valueOf(body.get("role").toUpperCase()),
-                user
+                user,
+                (RequestHelper.getClientIp(request)),
+                request.getHeader("User-Agent")
         );
 
         return ResponseEntity.ok("Member invited Successfully ");
@@ -76,13 +83,15 @@ public class OrganizationController {
             @PathVariable UUID orgId,
             @PathVariable UUID userId,
             @RequestBody Map<String,String> body,
-            @AuthenticationPrincipal User user
+            @AuthenticationPrincipal User user,HttpServletRequest request
     ){
         organizationService.changeMemberRole(
                 orgId,
                 userId,
                 OrgRole.valueOf(body.get("role").toUpperCase()),
-                user
+                user,
+                (RequestHelper.getClientIp(request)),
+                request.getHeader("User-Agent")
         );
         return ResponseEntity.ok("Role Updated Successfully");
     }
@@ -92,12 +101,14 @@ public class OrganizationController {
      public ResponseEntity<String> remove(
         @PathVariable UUID orgId,
         @PathVariable UUID userId,
-        @AuthenticationPrincipal User user
+        @AuthenticationPrincipal User user,HttpServletRequest request
 ){
         organizationService.removeMember(
                 orgId,
                 userId,
-                user
+                user,
+                (RequestHelper.getClientIp(request)),
+                request.getHeader("User-Agent")
         );
     return ResponseEntity.ok("Member removed successfully");
 }
@@ -116,9 +127,12 @@ public class OrganizationController {
     @DeleteMapping("/{orgId}")
     public ResponseEntity<Void> deleteOrg(
             @PathVariable UUID orgId,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal User user
+    ,HttpServletRequest request) {
 
-        organizationService.deleteOrg(orgId, user);
+        organizationService.deleteOrg(orgId, user
+        , (RequestHelper.getClientIp(request)),
+              request.getHeader("User-Agent")  );
         return ResponseEntity.noContent().build();
     }
 }
