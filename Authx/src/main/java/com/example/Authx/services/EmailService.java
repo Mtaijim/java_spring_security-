@@ -161,4 +161,80 @@ public void sendSuspiciousLoginAlert(
     }
 }
 
+    public void sendRiskAlertEmail(String toEmail, String otp) {
+    try{
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(
+                message,true,"UTF-8"
+        );
+
+        helper.setText(fromEmail);
+        helper.setTo(toEmail);
+        helper.setSubject("verify your Login - Authx Security");
+
+        String html = """
+                <div style="font-family: Arial, sans-serif;
+                                            max-width: 600px; margin: 0 auto;
+                                            padding: 20px;">
+                
+                                  <h2 style="color: #1a1a2e;">
+                                    Verify Your Login
+                                  </h2>
+                
+                                  <p>Hi,</p>
+                
+                                  <p>We detected a login attempt on your
+                                     <strong>AuthX</strong> account that looks unusual
+                                     (new device, new location, or repeated attempts).</p>
+                
+                                  <p>To continue, please enter the code below:</p>
+                
+                                  <div style="background: #f8f9fa;
+                                              border-left: 4px solid #e67e22;
+                                              padding: 20px;
+                                              border-radius: 4px;
+                                              margin: 20px 0;
+                                              text-align: center;">
+                                    <p style="margin: 0; font-size: 32px;
+                                              font-weight: bold; letter-spacing: 8px;
+                                              color: #1a1a2e;">
+                                      %s
+                                    </p>
+                                  </div>
+                
+                                  <p style="color: #555;">
+                                    This code expires in <strong>5 minutes</strong>.
+                                  </p>
+                
+                                  <p>If this wasn't you, do not share this code with
+                                     anyone and consider resetting your password
+                                     immediately.</p>
+                
+                                  <a href="%s/forgot-password"
+                                     style="display: inline-block;
+                                            background: #e67e22;
+                                            color: white;
+                                            padding: 12px 24px;
+                                            border-radius: 6px;
+                                            text-decoration: none;
+                                            font-weight: bold;
+                                            margin: 10px 0;">
+                                    Secure My Account
+                                  </a>
+                
+                                  <p style="color: #888; font-size: 12px;
+                                             margin-top: 30px;">
+                                    This email was sent by AuthX Security.
+                                    Please do not reply.
+                                  </p>
+                                </div>
+                
+                """.formatted(otp,frontendUrl);
+        helper.setText(html,true);
+        mailSender.send(message);
+
+    } catch (MessagingException e) {
+        throw new RuntimeException(e);
+    }
+    }
 }

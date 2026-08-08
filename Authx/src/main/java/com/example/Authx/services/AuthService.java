@@ -14,4 +14,5 @@ public interface AuthService {
 
     AuthResponse login(LoginRequest request,
                        HttpServletRequest httpRequest);
+    AuthResponse verifyRiskOtp(String email, String otp);
 }

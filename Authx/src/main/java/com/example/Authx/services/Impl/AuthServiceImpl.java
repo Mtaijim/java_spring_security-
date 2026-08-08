@@ -2,23 +2,22 @@ package com.example.Authx.services.Impl;
 
 import com.example.Authx.dtos.AuthResponse;
 import com.example.Authx.dtos.LoginRequest;
-import com.example.Authx.dtos.RoleDto;
+
 import com.example.Authx.dtos.UserDto;
 import com.example.Authx.entity.*;
 import com.example.Authx.helper.DeviceParser;
-import com.example.Authx.repositories.EmailVerificationTokenRepository;
-import com.example.Authx.repositories.PasswordResetTokenRepository;
-import com.example.Authx.repositories.userRepository;
+import com.example.Authx.helper.RequestHelper;
+import com.example.Authx.repositories.*;
 import com.example.Authx.security.JwtService;
 import com.example.Authx.services.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.example.Authx.repositories.RoleRepository;
+
 
 import java.time.Instant;
 import java.util.UUID;
@@ -39,18 +38,32 @@ public class AuthServiceImpl implements AuthService {
     private final LoginEventServices loginEventServices;
     private final DeviceParser deviceParser;
     private final AuditLogService auditLogService;
+    private final PasswordHistoryService passwordHistoryService;
+//    risk
+    private final RiskScoreRepository riskScoreRepository;
+    private final RiskScoringService riskScoringService;
+    private final RiskVerificationTokenRepository riskVerificationTokenRepository;
 
+
+//    register User
     @Override
     public UserDto registerUser(UserDto userDto) {
+
+//        validate email first
         emailvalidator.Validate(userDto.getEmail());
-        userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
+
+        String encodedPassword = passwordEncoder.encode(userDto.getPassword());
+        userDto.setPassword(encodedPassword);
 //        assign default role
         userDto.setEnable(false);
         UserDto savedUser =  userService.createUser(userDto);
+
+//        fetch user
+        User user =userService.getRawUserById(savedUser.getId().toString());
         String token = UUID.randomUUID().toString();
         EmailVerificationToken verificationToken = EmailVerificationToken.builder()
                 .token(token)
-                .user(userService.getRawUserById(savedUser.getId().toString()))
+                .user(user)
                 .expiresAt(Instant.now().plusSeconds(86400)).build();
         tokenRepository.save(verificationToken);
         emailService.sendVerificationEmail(savedUser.getEmail(), token);
@@ -65,10 +78,15 @@ public class AuthServiceImpl implements AuthService {
                 savedUser.getId().toString(),
                 "New account registered",
                 null, null   );
+//save initial password to history
+   passwordHistoryService.saveToHistory(
+          user,encodedPassword
+   );
 
         return savedUser;
     }
 
+//    verify email
     @Override
     public void verifyEmail(String token) {
         EmailVerificationToken emailVerificationToken = tokenRepository.findByToken(token)
@@ -92,6 +110,7 @@ public class AuthServiceImpl implements AuthService {
 
     }
 
+//    forget Password
     @Override
     @Transactional
     public void forgotPassword(String email) {
@@ -112,8 +131,11 @@ public class AuthServiceImpl implements AuthService {
     });
     }
 
+//    reset password
     @Override
     public void resetPassword(String token, String newPassword) {
+
+
      PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
              .orElseThrow(()-> new IllegalArgumentException("invalid reset token"));
 
@@ -126,18 +148,35 @@ public class AuthServiceImpl implements AuthService {
      }
 
      User user = resetToken.getUser();
-     user.setPassword(passwordEncoder.encode(newPassword));
+
+     if(passwordHistoryService.ispasswordReused(user,newPassword)){
+         throw new IllegalArgumentException(
+                 "You cannot reuse your last 5 passwords. " +
+                         "Please choose a different password."
+         );
+     }
+
+
+     String encodedPassword = passwordEncoder.encode(newPassword);
+     user.setPassword(encodedPassword);
      userRepository.save(user);
+
+//     save to history
+        passwordHistoryService.saveToHistory(user,encodedPassword);
 
      resetToken.setUsed(true);
      passwordResetTokenRepository.save(resetToken);
     }
+
+//    login
     public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest){
         User user = userRepository.findByEmail(request.email()).orElseThrow(()->new RuntimeException("Invalid Email or Password "));
 
     if(!user.isEnabled()){
         throw new RuntimeException("please verify your email first .");
     }
+        String ip = RequestHelper.getClientIp(httpRequest);
+        String agent = httpRequest.getHeader("User-Agent");
 
     if(!passwordEncoder.matches(request.password(),user.getPassword())){
       loginEventServices.recordFailure(user,httpRequest,"invalid password");
@@ -145,11 +184,62 @@ public class AuthServiceImpl implements AuthService {
     }
 loginEventServices.recordSucess(user, httpRequest);
 
+        //    RISK SCORE CALCULATE KARO
+        RiskScore risk = riskScoringService.calculateRisk(user, ip, agent);
+        riskScoreRepository.save(risk);
+
+        if(risk.getLevel() == RiskLevel.HIGH){
+            String otp = String.valueOf((int) (100000 + Math.random() * 900000));
+
+            RiskVerificationToken token = RiskVerificationToken.builder()
+                    .token(otp)
+                    .user(user)
+                    .expiresAt(Instant.now().plusSeconds(300))
+                    .used(false)
+                    .build();
+            riskVerificationTokenRepository.save(token);
+            emailService.sendRiskAlertEmail(user.getEmail(), otp);
+
+            return AuthResponse.builder()
+                    .requiresVerification(true)
+                    .riskLevel(RiskLevel.HIGH)
+                    .message("Suspicious login detected. OTP sent to your email.")
+                    .build();
+        }
+
+
         String token = jwtServices.generateAccessToken(user);
         UserDto userDto = userService.getUserById(user.getId().toString());
         return AuthResponse.builder()
                 .accessToken(token)
                 .user(userDto)
+                .riskLevel(risk.getLevel())
+                .requiresVerification(false)
                 .build();
     }
+
+    public AuthResponse verifyRiskOtp(String email ,String otp){
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(()-> new RuntimeException("User not found"));
+
+        RiskVerificationToken token = riskVerificationTokenRepository
+                .findByUserAndTokenAndUsedFalse(user,otp)
+                .orElseThrow(()-> new RuntimeException("invalid or Otp Expired !"));
+
+        if(token.getExpiresAt().isBefore(Instant.now())){
+            throw new RuntimeException("Otp Expired");
+        }
+        token.setUsed(true);
+        riskVerificationTokenRepository.save(token);
+
+        String jwtToken = jwtServices.generateAccessToken(user);
+        UserDto userDto = userService.getUserById(user.getId().toString());
+
+        return AuthResponse.builder()
+                .accessToken(jwtToken)
+                .user(userDto)
+                .requiresVerification(false)
+                .build();
+    }
+
 }

@@ -1,9 +1,6 @@
 package com.example.Authx.controller;
 
-import com.example.Authx.dtos.LoginRequest;
-import com.example.Authx.dtos.RefreshTokenRequest;
-import com.example.Authx.dtos.TokenResponse;
-import com.example.Authx.dtos.UserDto;
+import com.example.Authx.dtos.*;
 import com.example.Authx.entity.User;
 import com.example.Authx.helper.DeviceParser;
 import com.example.Authx.repositories.userRepository;
@@ -282,6 +279,13 @@ tokenBlacklistService.blacklist(jti,expiresAt);
     public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> body) {
         authService.resetPassword(body.get("token"), body.get("newPassword"));
         return ResponseEntity.ok("Password reset successfully. You can now login.");
+    }
+
+    @PostMapping("/verify-risk")
+    public ResponseEntity<AuthResponse> verifyRisk(@RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(
+                authService.verifyRiskOtp(body.get("email"), body.get("otp"))
+        );
     }
 
 }

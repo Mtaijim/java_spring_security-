@@ -63,6 +63,10 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(AppConstants.AUTH_PUBLIC_URLS)
                     .permitAll()
+                    .requestMatchers("/api/v1/auth/verify-risk").permitAll()
+                    .requestMatchers("/api/v1/risk/me").authenticated()
+                    .requestMatchers("/api/v1/admin/risk/**").hasRole("ADMIN")
+
                     .requestMatchers(HttpMethod.GET, "/api/v1/users")
                     .hasRole("ADMIN")
                     .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**")
