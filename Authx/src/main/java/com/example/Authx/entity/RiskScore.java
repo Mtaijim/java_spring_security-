@@ -22,8 +22,9 @@ public class RiskScore {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    private UUID userId;
     private String email ;
-    private int Score;
+    private int score;
 
     @Enumerated(EnumType.STRING)
     private RiskLevel level;

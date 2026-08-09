@@ -21,6 +21,7 @@ public class RateLimitService {
             new ConcurrentHashMap<>();
 
 
+
     public Bucket getLoginBucket(String ip ){
         return loginBuckets.computeIfAbsent(
                 ip,
@@ -28,15 +29,16 @@ public class RateLimitService {
         );
     }
 
+
     public Bucket getForgetPasswordBucket(String ip ){
         return forgetPasswordBuckets.computeIfAbsent(ip,key-> buildBucket(3, Duration.ofHours(1)));
 
 
     }
 
-    public Bucket getRegisterBucket(String ip) {
+ public Bucket getRegisterBucket(String email) {
         return registerBuckets.computeIfAbsent(
-                ip,
+                email.toLowerCase(),
                 key -> buildBucket(3, Duration.ofHours(1))
         );
     }

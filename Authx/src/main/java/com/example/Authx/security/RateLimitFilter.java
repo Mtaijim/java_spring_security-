@@ -59,19 +59,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
 
-        if ("POST".equalsIgnoreCase(method)&&
-        uri.equals("/api/v1/auth/register")){
-            Bucket bucket = rateLimitService.getRegisterBucket(ip);
-            if(!rateLimitService.tryConsume(bucket)){
-                sendBlockedResponse(
-                        response,
-                        "Too many registration attempts. " +
-                                "Please wait 1 hour.",
-                        rateLimitService.remainingTokens(bucket)
-                );
-                return;
-            }
-        }
+//        if ("POST".equalsIgnoreCase(method)&&
+//        uri.equals("/api/v1/auth/register")){
+//            Bucket bucket = rateLimitService.getRegisterBucket(ip);
+//            if(!rateLimitService.tryConsume(bucket)){
+//                sendBlockedResponse(
+//                        response,
+//                        "Too many registration attempts. " +
+//                                "Please wait 1 hour.",
+//                        rateLimitService.remainingTokens(bucket)
+//                );
+//                return;
+//            }
+//        }
 
         filterChain.doFilter(request,response);
     }

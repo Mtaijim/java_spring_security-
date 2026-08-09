@@ -2,7 +2,6 @@ package com.example.Authx.services;
 
 import com.example.Authx.entity.*;
 import com.example.Authx.repositories.AuditLogRepository;
-import jdk.jfr.Registered;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -66,7 +65,7 @@ public class RiskScoringService {
         return RiskScore.builder()
                 .id(user.getId())
                 .email(user.getEmail())
-                .Score(score)
+                .score(score)
                 .level(level)
                 .reasons(!reason.isEmpty() ? reason.toString() : "Normal login pattern")
                 .ipAddress(ip)

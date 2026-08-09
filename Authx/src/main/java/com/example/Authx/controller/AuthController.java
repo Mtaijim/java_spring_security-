@@ -6,6 +6,7 @@ import com.example.Authx.helper.DeviceParser;
 import com.example.Authx.repositories.userRepository;
 import com.example.Authx.security.JwtService;
 import com.example.Authx.services.*;
+import io.github.bucket4j.Bucket;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.Cookie;
@@ -54,6 +55,7 @@ public class AuthController {
     private final TokenBlacklistService tokenBlacklistService;
     private final SuspiciousLoginService suspiciousLoginService;
     private final DeviceParser deviceParser;
+    private final RateLimitService rateLimitService;
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(
@@ -260,7 +262,16 @@ tokenBlacklistService.blacklist(jti,expiresAt);
 
 
     @PostMapping("/register")
-    public ResponseEntity<UserDto> registerUser(@RequestBody UserDto userDto) {
+    public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
+        Bucket bucket = rateLimitService.getRegisterBucket(userDto.getEmail());
+        if (!rateLimitService.tryConsume(bucket)) {
+            Map<String, Object> body = Map.of(
+                    "status", 429,
+                    "message", "Too many registration attempts. Please wait 1 hour.",
+                    "remainingAttempts", rateLimitService.remainingTokens(bucket)
+            );
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(body);
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerUser(userDto));
     }
     @GetMapping("/verify")
@@ -270,8 +281,21 @@ tokenBlacklistService.blacklist(jti,expiresAt);
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestBody Map<String,String> body){
-        authService.forgotPassword(body.get("email"));
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String,String> body){
+        String email = body.get("email");
+        Bucket bucket= rateLimitService.getRegisterBucket(email);
+
+        if(!rateLimitService.tryConsume(bucket)){
+            Map<String, Object> resp = Map.of(
+                    "status", 429,
+                    "message", "Too many password reset requests. Please wait 1 hour.",
+                    "remainingAttempts", rateLimitService.remainingTokens(bucket)
+            );
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(resp);
+
+        }
+
+        authService.forgotPassword(email);
         return ResponseEntity.ok("If that email exists , a reset link has been sent .");
     }
 
