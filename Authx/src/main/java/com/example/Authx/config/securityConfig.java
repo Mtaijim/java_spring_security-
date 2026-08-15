@@ -108,6 +108,8 @@ response.getWriter().write(objectMapper.writeValueAsString(apiError));
                 .build();
 }
 
+
+// frontend connections
     @Bean
     public CorsConfigurationSource corsConfigurationSource(
             @Value("${app.cors.front-end-url}") String corsUrls

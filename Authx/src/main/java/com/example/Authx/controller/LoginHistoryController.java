@@ -1,9 +1,11 @@
 package com.example.Authx.controller;
 
+import com.example.Authx.dtos.LoginEventDto;
 import com.example.Authx.entity.LoginEvent;
 import com.example.Authx.entity.User;
 import com.example.Authx.repositories.userRepository;
 import com.example.Authx.services.LoginEventServices;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,19 +25,32 @@ public class LoginHistoryController {
     private final userRepository userRepository;
 
     @GetMapping("/history")
-    public ResponseEntity<List<LoginEvent>> getHistory(@AuthenticationPrincipal User user){
+    public ResponseEntity<List<LoginEventDto>> getHistory(@AuthenticationPrincipal User user){
 
-        if(user ==null){
+        if (user == null) {
             String email = SecurityContextHolder
                     .getContext()
                     .getAuthentication()
                     .getPrincipal()
                     .toString();
-
             user = userRepository.findByEmail(email).orElseThrow();
         }
 
+        List<LoginEventDto> history = loginEventServices
+                .getHistory(user)
+                .stream()
+                .map(e -> LoginEventDto.builder()
+                        .id(e.getId())
+                        .ipAddress(e.getIpAddress())
+                        .device(e.getDevice())
+                        .os(e.getOs())
+                        .status(e.getStatus())
+                        .failureReason(e.getFailureReason())
+                        .createdAt(e.getCreatedAt())
+                        .build()
+                )
+                .toList();
 
-        return ResponseEntity.ok(loginEventServices.getHistory(user));
+        return ResponseEntity.ok(history);
     }
 }

@@ -46,17 +46,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
 
         }
-        if("POST".equalsIgnoreCase(method) && uri.equals("api/v1/auth/forget-password")){
-            Bucket bucket = rateLimitService.getForgetPasswordBucket(ip);
-
-            if(!rateLimitService.tryConsume(bucket)){
-                sendBlockedResponse(
-                        response,"Too many password reset requests. " +
-                                "Please wait 1 hour.", rateLimitService.remainingTokens(bucket)
-                );
-                return;
-            }
-        }
+//        if("POST".equalsIgnoreCase(method) && uri.equals("api/v1/auth/forget-password")){
+//            Bucket bucket = rateLimitService.getForgetPasswordBucket(ip);
+//
+//            if(!rateLimitService.tryConsume(bucket)){
+//                sendBlockedResponse(
+//                        response,"Too many password reset requests. " +
+//                                "Please wait 1 hour.", rateLimitService.remainingTokens(bucket)
+//                );
+//                return;
+//            }
+//        }
 
 
 //        if ("POST".equalsIgnoreCase(method)&&

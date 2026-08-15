@@ -27,19 +27,22 @@ public class EmailService {
     private String frontendUrl;
 
 public void sendVerificationEmail(String toEmail , String token){
-    String verifyLink = frontendUrl +"/verify-email?token="+token;
+    try {
+        String verifyLink = frontendUrl + "/verify-email?token=" + token;
 
-    SimpleMailMessage mailMessage= new SimpleMailMessage();
-    mailMessage.setFrom(fromEmail);
-    mailMessage.setTo(toEmail);
-    mailMessage.setSubject("VERIFY YOUR AUTHX ACCOUNT");
-    mailMessage.setText("Hi,\n\n" +
-            "Thanks for registering. Click the link below to verify your email:\n\n" +
-            verifyLink + "\n\n" +
-            "This link expires in 24 hours.\n\n" +
-            "If you didn't register, ignore this email.");
-    mailSender.send(mailMessage);
-
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setFrom(fromEmail);
+        mailMessage.setTo(toEmail);
+        mailMessage.setSubject("VERIFY YOUR AUTHX ACCOUNT");
+        mailMessage.setText("Hi,\n\n" +
+                "Thanks for registering. Click the link below to verify your email:\n\n" +
+                verifyLink + "\n\n" +
+                "This link expires in 24 hours.\n\n" +
+                "If you didn't register, ignore this email.");
+        mailSender.send(mailMessage);
+    }catch (Exception e){
+        log.error("Failed to send verification email to {}: {}", toEmail, e.getMessage());
+    }
 }
 
 public void sendPasswordResetEmail(String toEmail,String token){

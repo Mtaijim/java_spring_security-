@@ -1,21 +1,21 @@
 package com.example.Authx.controller;
 
 import com.example.Authx.dtos.*;
-import com.example.Authx.entity.User;
+import com.example.Authx.entity.*;
 import com.example.Authx.helper.DeviceParser;
+import com.example.Authx.repositories.RiskScoreRepository;
+import com.example.Authx.repositories.RiskVerificationTokenRepository;
 import com.example.Authx.repositories.userRepository;
 import com.example.Authx.security.JwtService;
 import com.example.Authx.services.*;
 import io.github.bucket4j.Bucket;
 import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
+
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import org.antlr.v4.runtime.Token;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,10 +24,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import com.example.Authx.entity.RefreshToken;
 import com.example.Authx.repositories.RefreshTokenRepository;
 import java.time.Instant;
 import java.util.Arrays;
@@ -56,6 +55,12 @@ public class AuthController {
     private final SuspiciousLoginService suspiciousLoginService;
     private final DeviceParser deviceParser;
     private final RateLimitService rateLimitService;
+    private  final  AuditLogService auditLogService;
+    private final EmailService emailService;
+    private final RiskScoringService riskScoringService;
+    private final RiskScoreRepository riskScoreRepository;
+    private final RiskVerificationTokenRepository riskVerificationTokenRepository;
+
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(
@@ -81,9 +86,43 @@ public class AuthController {
                 return ResponseEntity.ok(TokenResponse.mfaRequired(mfaToken));
             }
 
+//            new changes made
+            String ip = deviceParser.parseIp(request);
+            String agent = request.getHeader("User-Agent");
+            RiskScore risk = riskScoringService.calculateRisk(user, ip, agent);
+            riskScoreRepository.save(risk);
+            if(risk.getLevel() == RiskLevel.HIGH){
+                String otp = String.valueOf((int) (100000 + Math.random() * 900000));
+
+                RiskVerificationToken token = RiskVerificationToken.builder()
+                        .token(otp)
+                        .user(user)
+                        .used(false)
+                        .expiresAt(Instant.now().plusSeconds(300))
+                        .build();
+
+                riskVerificationTokenRepository.save(token);
+                emailService.sendRiskAlertEmail(user.getEmail(), otp);
+                return ResponseEntity.ok(
+                        TokenResponse.verificationRequired()
+                );
+            }
+
+
 //            record success
            lockoutService.handleSuccess(user);
             loginEventServices.recordSucess(user, request);
+            auditLogService.log(
+                    null,
+                    user.getId(),
+                    user.getEmail(),
+                    AuditAction.LOGIN,
+                    "AUTH",
+                    null,
+                    "User logged in successfully",
+                    deviceParser.parseIp(request),
+                    request.getHeader("User-Agent")
+            );
             // @Async means this runs without blocking response
             suspiciousLoginService.checkAndAlert(
                     user,
@@ -105,13 +144,23 @@ public class AuthController {
                 lockoutService.handleFailedAttempt(user);
                 loginEventServices.recordFailure(user,
                         request, e.getMessage());
-
+                auditLogService.logFailure(
+                        null,
+                        user.getId(),
+                        user.getEmail(),
+                        AuditAction.LOGIN_FAILED,
+                        "AUTH",
+                        null,
+                        "Login failed: " + e.getMessage(),
+                        deviceParser.parseIp(request),
+                        request.getHeader("User-Agent")
+                );
                 int remaining = lockoutService.remainingAttempts(user);
                 if(remaining>0){
                     throw new BadCredentialsException(
-                            "Invalid password"+
-                                    remaining +"attempt" +
-                                    (remaining>1 ? "s" : "") + "remaining."
+                            "Invalid password. "+
+                                    remaining +" attempt" +
+                                    (remaining>1 ? "s" : "") + " remaining."
                     );
                 }else {
                     throw new BadCredentialsException(
@@ -199,6 +248,22 @@ public ResponseEntity<Void> logout(
 //                add to blacklist
 tokenBlacklistService.blacklist(jti,expiresAt);
 
+
+                UUID userId = jwtService.getUserId(accessToken);
+                String email = jwtService.getEmail(accessToken);
+
+                auditLogService.log(
+                        null,
+                        userId,
+                        email,
+                        AuditAction.LOGOUT,
+                        "AUTH",
+                        null,
+                        "User logged out",
+                        deviceParser.parseIp(request),
+                        request.getHeader("User-Agent")
+                );
+
             }
         }catch (Exception ignored){}
     }
@@ -283,7 +348,7 @@ tokenBlacklistService.blacklist(jti,expiresAt);
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String,String> body){
         String email = body.get("email");
-        Bucket bucket= rateLimitService.getRegisterBucket(email);
+        Bucket bucket= rateLimitService.getForgetPasswordBucket(email);
 
         if(!rateLimitService.tryConsume(bucket)){
             Map<String, Object> resp = Map.of(

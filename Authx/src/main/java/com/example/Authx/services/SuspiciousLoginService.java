@@ -43,14 +43,24 @@ public class SuspiciousLoginService {
                 sendAlert(user, currentDevice,currentOs ,currentIp);
                 return;
             }
+
+
             boolean knownDevice = recentLogins.stream()
                     .anyMatch(event ->
                             matches(event.getDevice(), currentDevice) &&
                                     matches(event.getOs(), currentOs)
                     );
 boolean KnownIp = recentLogins.stream()
-        .anyMatch(event->matches(event.getDevice(),currentDevice)&&
-                matches(event.getOs(),currentDevice));
+        .anyMatch(event->
+                event.getIpAddress() != null
+                && event.getIpAddress().equals(currentIp)
+                );
+
+            if (!knownDevice || !KnownIp) {
+                log.info("New device/location login for: {}",
+                        user.getEmail());
+                sendAlert(user, currentDevice, currentOs, currentIp);
+            }
 
         } catch (Exception e) {
             log.error(

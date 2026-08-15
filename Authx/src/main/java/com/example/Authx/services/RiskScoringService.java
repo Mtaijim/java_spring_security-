@@ -25,7 +25,8 @@ public class RiskScoringService {
 
 //        known device
         boolean KnownDevice = pastLogin.stream()
-                .anyMatch(auditLogs -> userAgent != null & userAgent.equals(auditLogs.getUserAgent()));
+                .anyMatch(auditLogs -> userAgent != null &&
+                        userAgent.equals(auditLogs.getUserAgent()));
         if(!KnownDevice && !pastLogin.isEmpty()){
             score += 30;
             reason.append("New Device .");
@@ -33,7 +34,7 @@ public class RiskScoringService {
 
 //        known Ip
         boolean KnownIp = pastLogin.stream()
-                .anyMatch(auditLogs -> ip != null & ip.equals(auditLogs.getIpAddress()));
+                .anyMatch(auditLogs -> ip != null && ip.equals(auditLogs.getIpAddress()));
         if (!KnownIp && !pastLogin.isEmpty()){
             score +=25;
             reason.append("new Ip/location");
@@ -63,7 +64,7 @@ public class RiskScoringService {
                 :RiskLevel.HIGH;
 
         return RiskScore.builder()
-                .id(user.getId())
+                .userId(user.getId())
                 .email(user.getEmail())
                 .score(score)
                 .level(level)

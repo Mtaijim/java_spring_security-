@@ -30,8 +30,10 @@ public class RateLimitService {
     }
 
 
-    public Bucket getForgetPasswordBucket(String ip ){
-        return forgetPasswordBuckets.computeIfAbsent(ip,key-> buildBucket(3, Duration.ofHours(1)));
+    public Bucket getForgetPasswordBucket(String email ){
+        return forgetPasswordBuckets.
+                computeIfAbsent(email.toLowerCase(),
+                        key-> buildBucket(3, Duration.ofHours(1)));
 
 
     }

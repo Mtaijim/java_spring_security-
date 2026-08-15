@@ -47,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
 
 //    register User
     @Override
+    @Transactional
     public UserDto registerUser(UserDto userDto) {
 
 //        validate email first
@@ -166,57 +167,19 @@ public class AuthServiceImpl implements AuthService {
 
      resetToken.setUsed(true);
      passwordResetTokenRepository.save(resetToken);
+        auditLogService.log(
+                null,
+                user.getId(),
+                user.getEmail(),
+                AuditAction.PASSWORD_RESET,
+                "AUTH",
+                null,
+                "Password reset via email link",
+                null, null
+        );
     }
 
-//    login
-    public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest){
-        User user = userRepository.findByEmail(request.email()).orElseThrow(()->new RuntimeException("Invalid Email or Password "));
-
-    if(!user.isEnabled()){
-        throw new RuntimeException("please verify your email first .");
-    }
-        String ip = RequestHelper.getClientIp(httpRequest);
-        String agent = httpRequest.getHeader("User-Agent");
-
-    if(!passwordEncoder.matches(request.password(),user.getPassword())){
-      loginEventServices.recordFailure(user,httpRequest,"invalid password");
-        throw new RuntimeException("Invalid email or password");
-    }
-loginEventServices.recordSucess(user, httpRequest);
-
-        //    RISK SCORE CALCULATE KARO
-        RiskScore risk = riskScoringService.calculateRisk(user, ip, agent);
-        riskScoreRepository.save(risk);
-
-        if(risk.getLevel() == RiskLevel.HIGH){
-            String otp = String.valueOf((int) (100000 + Math.random() * 900000));
-
-            RiskVerificationToken token = RiskVerificationToken.builder()
-                    .token(otp)
-                    .user(user)
-                    .expiresAt(Instant.now().plusSeconds(300))
-                    .used(false)
-                    .build();
-            riskVerificationTokenRepository.save(token);
-            emailService.sendRiskAlertEmail(user.getEmail(), otp);
-
-            return AuthResponse.builder()
-                    .requiresVerification(true)
-                    .riskLevel(RiskLevel.HIGH)
-                    .message("Suspicious login detected. OTP sent to your email.")
-                    .build();
-        }
-
-
-        String token = jwtServices.generateAccessToken(user);
-        UserDto userDto = userService.getUserById(user.getId().toString());
-        return AuthResponse.builder()
-                .accessToken(token)
-                .user(userDto)
-                .riskLevel(risk.getLevel())
-                .requiresVerification(false)
-                .build();
-    }
+//
 
     public AuthResponse verifyRiskOtp(String email ,String otp){
         User user = userRepository.findByEmail(email)

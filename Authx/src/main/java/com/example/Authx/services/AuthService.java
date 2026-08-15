@@ -12,7 +12,7 @@ public interface AuthService {
     void forgotPassword(String email);
     void resetPassword(String token , String newPassword);
 
-    AuthResponse login(LoginRequest request,
-                       HttpServletRequest httpRequest);
+//    AuthResponse login(LoginRequest request,
+//                       HttpServletRequest httpRequest);
     AuthResponse verifyRiskOtp(String email, String otp);
 }
