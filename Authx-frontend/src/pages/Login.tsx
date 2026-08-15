@@ -45,18 +45,23 @@ const Login = () => {
       return;
     }
     try {
-      // Call the loginUser function from Authservice.ts
       // console.log("Sending:", loginData);
       const response = await login(loginData);
       if (response.mfaRequired && response.mfaToken) {
         navigate("/mfa/verify", { state: { mfaToken: response.mfaToken } });
         return;
       }
-      toast.success("Login success");
+
+      if (response.requiresVerification) {
+        navigate("/auth/verify-risk", { state: { email: loginData.email } });
+        return;
+      }
+
+      toast.success("Login successfull !");
+
       // const response = await loginUser(loginData)
       // console.log("User logged in successfully:", response);
       navigate("/dashboard");
-      // Handle successful login (e.g., redirect, store token, etc.)
     } catch (error: any) {
       console.error("Error logging in:", error);
       const status = error.response?.status;

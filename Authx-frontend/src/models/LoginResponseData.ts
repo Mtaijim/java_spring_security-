@@ -7,4 +7,6 @@ export default interface LoginResponseData {
   expiresIn: number;
   mfaRequired?: boolean;
   mfaToken?: string;
+  requiresVerification?: boolean;
+  message?: string;
 }
