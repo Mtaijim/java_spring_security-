@@ -23,6 +23,12 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import MfaChallenges from "./pages/MfaChallenges.tsx";
 import MfaSetup from "./pages/users/MfaSetup.tsx";
 import { LoginHistory } from "./pages/LoginHistory.tsx";
+import VerifyRisk from "./pages/VerifyRisk.tsx";
+import AuditLogViewer from "./pages/AuditLogViewer.tsx";
+import PermissionsManager from "./pages/PermissionsManager.tsx";
+import OrgsList from "./pages/orgs/OrgsList.tsx";
+import CreateOrg from "./pages/orgs/CreateOrg.tsx";
+import OrgDetails from "./pages/orgs/OrgDetails.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -43,6 +49,11 @@ createRoot(document.getElementById("root")!).render(
             <Route path="mfa/setup" element={<MfaSetup />} />
             <Route element={<AdminRoute />}>
               <Route path="admin/users" element={<AdminUserList />} />
+              <Route path="/admin/audit" element={<AuditLogViewer />} />
+              <Route
+                path="/admin/permissions"
+                element={<PermissionsManager />}
+              />
             </Route>
           </Route>
           <Route path="oauth/success" element={<OAuthScucess />} />
@@ -51,6 +62,11 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/check-email" element={<CheckEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/auth/verify-risk" element={<VerifyRisk />} />
+
+          <Route path="/orgs" element={<OrgsList />} />
+          <Route path="/orgs/create" element={<CreateOrg />} />
+          <Route path="/orgs/:orgId" element={<OrgDetails />} />
         </Route>
       </Routes>
     </ThemeProvider>

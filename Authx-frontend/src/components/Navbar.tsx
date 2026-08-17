@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from "react-router";
 import { isAdmin } from "@/utils/roles";
 import { ThemeToggle } from "./ThemeToggle.tsx";
 import { User, History } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 const Navbar = () => {
   const checkLogin = useAuthStore((state) => state.checkLogin);
@@ -47,6 +48,11 @@ const Navbar = () => {
                   )}
                 </div>{" "}
               </div>
+            </NavLink>
+
+            <NavLink to="/orgs">
+              <Building2 className="w-4 h-4" />
+              Organizations
             </NavLink>
             <NavLink
               to="/dashboard/history"
