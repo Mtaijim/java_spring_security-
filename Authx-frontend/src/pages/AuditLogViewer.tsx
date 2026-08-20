@@ -78,7 +78,7 @@ const AuditLogViewer = () => {
       setPage(response.data.number);
     } catch {
     } finally {
-      setLoading(true);
+      setLoading(false);
     }
   };
 

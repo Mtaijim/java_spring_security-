@@ -40,6 +40,11 @@ public class OrgMembership {
     private OrgRole role;
 
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private InvitedStatus status = InvitedStatus.PENDING;
+
     @Column(name = "joined_at")
     private Instant joinedAt;
 
@@ -47,10 +52,15 @@ public class OrgMembership {
     @JoinColumn(name = "invited_by")
     private User invitedBy;
 
+    @Column(name = "invited_at")
+    private Instant invitedAt;
+
 
     @PrePersist
     public void prePersist() {
-        joinedAt = Instant.now();
+        if (invitedAt == null) {
+            invitedAt = Instant.now();
+        }
     }
 
 }

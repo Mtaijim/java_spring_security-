@@ -1,6 +1,7 @@
 package com.example.Authx.controller;
 
 import com.example.Authx.dtos.OrgDto;
+import com.example.Authx.dtos.PendingInviteDto;
 import com.example.Authx.dtos.mfa.OrgMemberDto;
 import com.example.Authx.entity.OrgRole;
 import com.example.Authx.entity.User;
@@ -49,6 +50,15 @@ public class OrganizationController {
         return ResponseEntity.ok(organizationService.getMyOrgs(user));
     }
 
+
+    // get single org details
+    @GetMapping("/{orgId}")
+    public ResponseEntity<OrgDto> getOrg(
+            @PathVariable UUID orgId,
+            @AuthenticationPrincipal User user
+    ) {
+        return ResponseEntity.ok(organizationService.getOrgById(orgId, user));
+    }
 //list of all members
     @GetMapping("/{orgId}/members")
     public ResponseEntity<List<OrgMemberDto>> getMembers(
@@ -75,6 +85,47 @@ public class OrganizationController {
         );
 
         return ResponseEntity.ok("Member invited Successfully ");
+    }
+// accept invite
+
+    @PostMapping("/{orgId}/invites/{membershipId}/accept")
+    public ResponseEntity<String> acceptInvite(
+            @PathVariable UUID orgId,
+            @PathVariable UUID membershipId,
+            @AuthenticationPrincipal User user,
+            HttpServletRequest request
+    ){
+        organizationService.acceptInvite(
+                membershipId,
+                user,
+                RequestHelper.getClientIp(request),
+                request.getHeader("User-Agent")
+        );
+        return ResponseEntity.ok("Invite accepted ");
+    }
+
+//decline Invite
+
+    @PostMapping("/{orgId}/invites/{membershipId}/decline")
+    public ResponseEntity<String> declineInvite(
+            @PathVariable UUID orgId,
+            @PathVariable UUID membershipId,
+            @AuthenticationPrincipal User user,
+            HttpServletRequest request
+    ){
+        organizationService.declineInvite(
+                membershipId,
+                user,
+                RequestHelper.getClientIp(request),
+                request.getHeader("User-Agent")
+        );
+        return ResponseEntity.ok("Invite declined");
+    }
+    @GetMapping("/invites/pending")
+    public ResponseEntity<List<PendingInviteDto>> getMyPendingInvites(
+            @AuthenticationPrincipal User user
+    ) {
+        return ResponseEntity.ok(organizationService.getMyPendingInvites(user));
     }
 
 //    change role
@@ -113,17 +164,8 @@ public class OrganizationController {
     return ResponseEntity.ok("Member removed successfully");
 }
 
-// delete org
-//@DeleteMapping("/{orgId}")
-//public ResponseEntity<String> deleteOrg(
-//        @PathVariable UUID orgId,
-//        @AuthenticationPrincipal User user) {
-//
-//    orgService.deleteOrg(orgId, user);
-//
-//    return ResponseEntity.ok("Organization deleted successfully");
-//}
-// best rest  practice
+
+// Delete Orgs
     @DeleteMapping("/{orgId}")
     public ResponseEntity<Void> deleteOrg(
             @PathVariable UUID orgId,
@@ -135,4 +177,6 @@ public class OrganizationController {
               request.getHeader("User-Agent")  );
         return ResponseEntity.noContent().build();
     }
+
+
 }

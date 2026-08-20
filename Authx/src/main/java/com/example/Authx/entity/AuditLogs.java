@@ -11,10 +11,10 @@ import java.util.UUID;
 @Table(
         name = "audit_logs",
         indexes = {
-                @Index(name = "idx_audit_user_id",columnList = "userid"),
-                @Index(name = "idx_audit_org_id", columnList = "orgId"),
+                @Index(name = "idx_audit_user_id",columnList = "user_id"),
+                @Index(name = "idx_audit_org_id", columnList = "org_id"),
                 @Index(name = "idx_audit_action", columnList = "action"),
-                @Index(name = "idx_audit_created_at", columnList = "createdAt")
+                @Index(name = "idx_audit_created_at", columnList = "created_at")
         }
 )
 @Getter
@@ -35,7 +35,7 @@ public class AuditLogs {
     private String email;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false,name = "action",columnDefinition = "VARCHAR(64)")
     private AuditAction action;
 
     private String resourceType;

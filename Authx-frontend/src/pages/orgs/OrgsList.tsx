@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building2, Plus, Users, Crown, Shield, Eye } from "lucide-react";
+import PendingInvites from "../PendingInvites";
 
 type OrgDto = {
   id: string;
@@ -48,6 +49,7 @@ const OrgsList = () => {
   }
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      <PendingInvites />
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

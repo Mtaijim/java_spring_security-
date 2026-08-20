@@ -2,15 +2,20 @@ package com.example.Authx.services;
 
 
 import com.example.Authx.dtos.OrgDto;
+import com.example.Authx.dtos.PendingInviteDto;
 import com.example.Authx.dtos.mfa.OrgMemberDto;
 import com.example.Authx.entity.*;
+import com.example.Authx.exceptions.ResourceNotFoundException;
 import com.example.Authx.repositories.OrganizationRepository;
 import com.example.Authx.repositories.OrgMembershipRepository;
 import com.example.Authx.repositories.userRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -45,6 +50,8 @@ public class OrganizationService {
                 .organization(org)
                 .user(creator)
                 .role(OrgRole.OWNER)
+                .status(InvitedStatus.ACTIVE)
+                .joinedAt(Instant.now())
                 .invitedBy(creator).build();
         orgMembershipRepository.save(membership);
         auditLogService.log(
@@ -111,6 +118,7 @@ public void inviteMember(UUID orgId, String email,OrgRole role
             .organization(org)
             .user(invitedUser)
             .role(role)
+            .status(InvitedStatus.PENDING)
             .invitedBy(invitedBy)
             .build();
     orgMembershipRepository.save(membership);
@@ -135,7 +143,7 @@ public void inviteMember(UUID orgId, String email,OrgRole role
         if(!orgMembershipRepository.existsByOrganizationAndUser(org,user)){
             throw new RuntimeException("Must be Member at least ");
         }
-        return orgMembershipRepository.findByOrganization(org)
+        return orgMembershipRepository.findByOrganizationAndStatus(org,InvitedStatus.ACTIVE)
                 .stream().map(
                         m->
                                 OrgMemberDto.builder()
@@ -296,4 +304,92 @@ User targetUser = userRepository.findById(targetId)
     }
 
 
+    public @Nullable OrgDto getOrgById(UUID orgId, User user) {
+        Organization org = organizationRepository.findById((orgId))
+                .orElseThrow(()-> new ResourceNotFoundException("organization not found"));
+
+         OrgMembership orgMembership = orgMembershipRepository
+                 .findByOrganizationAndUser(org,user).orElseThrow(()-> new AccessDeniedException("you are not the member of this organisation"));
+         OrgDto dto = new OrgDto();
+         dto.setId(org.getId());
+        dto.setName(org.getName());
+        dto.setSlug(org.getSlug());
+        dto.setDescription(org.getDescription());
+        dto.setMemberCount(orgMembershipRepository.countByOrganization(org));
+        dto.setMyRole(orgMembership.getRole());
+        return dto;
+    }
+
+    @Transactional
+    public void acceptInvite(UUID membershipId, User user, String Ip, String agent) {
+        OrgMembership membership = orgMembershipRepository.findById(membershipId)
+                .orElseThrow(()-> new RuntimeException("invite not found "));
+        if(!membership.getUser().getId().equals(user.getId())){
+            throw new RuntimeException("this invite does not belongs to you ");
+        }
+
+        if(membership.getStatus() != InvitedStatus.PENDING){
+            throw  new RuntimeException("there is no longer pending invite ");
+        }
+        membership.setStatus(InvitedStatus.ACTIVE);
+        membership.setJoinedAt(Instant.now());
+        orgMembershipRepository.save(membership);
+        auditLogService.log(
+                membership.getOrganization().getId(),
+                user.getId(),
+                user.getEmail(),
+                AuditAction.ACCEPT_INVITE,
+                "MEMBERSHIP",
+                membership.getId().toString(),
+                user.getEmail() + " accepted invite as " + membership.getRole(),
+                Ip, agent
+        );
+    }
+
+    @Transactional
+    public void declineInvite(UUID membershipId, User user, String Ip, String agent) {
+
+    OrgMembership membership = orgMembershipRepository.findById(membershipId)
+            .orElseThrow(()->new RuntimeException(" Invite not found "));
+
+        if(!membership.getUser().getId().equals(user.getId())){
+            throw new RuntimeException("this invite does not belongs to you ");
+        }
+
+        if(membership.getStatus() != InvitedStatus.PENDING){
+            throw  new RuntimeException("there is no longer pending invite ");
+        }
+
+        membership.setStatus(InvitedStatus.DECLINED);
+        orgMembershipRepository.save(membership);
+
+        auditLogService.log(
+                membership.getOrganization().getId(),
+                user.getId(),
+                user.getEmail(),
+                AuditAction.DECLINE_INVITE,
+                "MEMBERSHIP",
+                membership.getId().toString(),
+                user.getEmail() + " declined invite",
+                Ip, agent
+        );
+    }
+
+    @Transactional()
+    public @Nullable List<PendingInviteDto> getMyPendingInvites(User user) {
+        return orgMembershipRepository.findByUserAndStatus(user,InvitedStatus.PENDING)
+                .stream()
+                .map(m->
+                        new PendingInviteDto(
+                                m.getId(),
+                                m.getOrganization().getId(),
+                                m.getOrganization().getName(),
+                                m.getOrganization().getSlug(),
+                                m.getRole(),
+                                m.getInvitedBy() != null ? m.getInvitedBy().getName() : null,
+                                m.getInvitedBy() != null ? m.getInvitedBy().getEmail() : null,
+                                m.getInvitedAt()
+                        ))
+                .toList();
+    }
 }

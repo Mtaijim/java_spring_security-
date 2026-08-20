@@ -29,6 +29,7 @@ import PermissionsManager from "./pages/PermissionsManager.tsx";
 import OrgsList from "./pages/orgs/OrgsList.tsx";
 import CreateOrg from "./pages/orgs/CreateOrg.tsx";
 import OrgDetails from "./pages/orgs/OrgDetails.tsx";
+import RiskDashboard from "./pages/RiskDashBoard.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
@@ -36,37 +37,40 @@ createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route path="/" element={<RootLayout />}>
           <Route index element={<App />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/mfa/verify" element={<MfaChallenges />} />
+          <Route path="signup" element={<SignUp />} />
+          <Route path="login" element={<Login />} />
+          <Route path="about" element={<About />} />
+          <Route path="services" element={<Services />} />
+          <Route path="mfa/verify" element={<MfaChallenges />} />
 
-          <Route path="/dashboard" element={<Dashboard />}>
-            <Route path="/dashboard/history" element={<LoginHistory />} />
+          <Route path="dashboard" element={<Dashboard />}>
             <Route index element={<Userhome />} />
+            <Route path="history" element={<LoginHistory />} />
             <Route path="profile" element={<Userprofile />} />
             <Route path="mfa/setup" element={<MfaSetup />} />
+
             <Route element={<AdminRoute />}>
               <Route path="admin/users" element={<AdminUserList />} />
-              <Route path="/admin/audit" element={<AuditLogViewer />} />
+              <Route path="admin/audit" element={<AuditLogViewer />} />
               <Route
-                path="/admin/permissions"
+                path="admin/permissions"
                 element={<PermissionsManager />}
               />
+              <Route path="admin/risk" element={<RiskDashboard />} />
             </Route>
           </Route>
+
           <Route path="oauth/success" element={<OAuthScucess />} />
           <Route path="oauth/failure" element={<OAuthFailure />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/check-email" element={<CheckEmail />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/auth/verify-risk" element={<VerifyRisk />} />
+          <Route path="verify-email" element={<VerifyEmail />} />
+          <Route path="check-email" element={<CheckEmail />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
+          <Route path="auth/verify-risk" element={<VerifyRisk />} />
 
-          <Route path="/orgs" element={<OrgsList />} />
-          <Route path="/orgs/create" element={<CreateOrg />} />
-          <Route path="/orgs/:orgId" element={<OrgDetails />} />
+          <Route path="orgs" element={<OrgsList />} />
+          <Route path="orgs/create" element={<CreateOrg />} />
+          <Route path="orgs/:orgId" element={<OrgDetails />} />
         </Route>
       </Routes>
     </ThemeProvider>

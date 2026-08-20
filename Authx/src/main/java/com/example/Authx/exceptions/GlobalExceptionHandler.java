@@ -56,5 +56,10 @@ private final Logger logger = (Logger) LoggerFactory.getLogger(GlobalExceptionHa
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException exception){
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), HttpStatus.BAD_REQUEST, 400);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
 
 }

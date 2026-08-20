@@ -63,7 +63,7 @@ const AdminUserList = () => {
             <th className="px-4 py-3">Email</th>
             <th className="px-4 py-3">Name</th>
             <th className="px-4 py-3">Role</th>
-            <th className="px-4 py-3">Enabled</th> {/* ← add this */}
+            <th className="px-4 py-3">Enabled</th>
             <th className="px-4 py-3">Actions</th>
           </tr>
         </thead>

@@ -37,11 +37,16 @@ public class RiskScoreController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/api/v1/admin/risk")
     public Page<RiskScoreResponse> getHighRiskEvents(
-            @RequestParam(defaultValue = "HIGH")RiskLevel level,
+            @RequestParam(required = false) RiskLevel level,
             @PageableDefault(sort = "createdAt" , direction = Sort.Direction.DESC)
             Pageable pageable
             ){
-        return riskScoreRepository.findByLevelOrderByCreatedAtDesc(level,pageable)
+        if (level != null) {
+            return riskScoreRepository
+                    .findByLevelOrderByCreatedAtDesc(level, pageable)
+                    .map(this::todto);
+        }
+        return riskScoreRepository.findAll(pageable)
                 .map(this::todto);
     }
 
